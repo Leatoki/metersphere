@@ -2,7 +2,7 @@ package io.metersphere.api.dto.definition.request.assertions;
 
 import com.alibaba.fastjson.annotation.JSONType;
 import io.metersphere.api.dto.definition.request.MsTestElement;
-import io.metersphere.api.dto.scenario.environment.EnvironmentConfig;
+import io.metersphere.api.dto.definition.request.ParameterConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.collections.CollectionUtils;
@@ -24,8 +24,10 @@ public class MsAssertions extends MsTestElement {
     private MsAssertionDuration duration;
     private String type = "Assertions";
 
-    public void toHashTree(HashTree tree, List<MsTestElement> hashTree, EnvironmentConfig config) {
-        addAssertions(tree);
+    public void toHashTree(HashTree tree, List<MsTestElement> hashTree, ParameterConfig config) {
+        if (this.isEnable()) {
+            addAssertions(tree);
+        }
     }
 
     private void addAssertions(HashTree hashTree) {

@@ -1,30 +1,39 @@
 <template>
   <div id="menu-bar" v-if="isRouterAlive">
     <el-row type="flex">
-      <el-col :span="10">
+      <el-col :span="14">
         <el-menu class="header-menu" :unique-opened="true" mode="horizontal" router :default-active='$route.path'>
+
+          <el-submenu :class="{'deactivation':!isProjectActivation}"
+                      v-permission="['test_manager','test_user','test_viewer']" index="3">
+            <template v-slot:title>{{ $t('commons.project') }}</template>
+            <search-list ref="projectRecent" :options="projectRecent"/>
+            <el-divider class="menu-divider"/>
+            <el-menu-item :index="'/setting/project/create'">
+              <font-awesome-icon :icon="['fa', 'plus']"/>
+              <span style="padding-left: 7px;">{{ $t("project.create") }}</span>
+            </el-menu-item>
+            <ms-show-all :index="'/setting/project/all'"/>
+          </el-submenu>
+
           <el-menu-item :index="'/api/home'">
             {{ $t("i18n.home") }}
           </el-menu-item>
 
-          <el-menu-item :index="'/api/definition'">
+          <el-menu-item v-show="$store.state.switch.value=='new'" :index="'/api/definition'">
             {{ $t("i18n.definition") }}
           </el-menu-item>
 
-          <el-menu-item :index="'/api/automation'">
+          <el-menu-item v-show="$store.state.switch.value=='new'" :index="'/api/automation'">
             {{ $t("i18n.automation") }}
           </el-menu-item>
 
-          <el-submenu :class="{'deactivation':!isProjectActivation}" v-permission="['test_manager','test_user','test_viewer']" index="3">
-            <template v-slot:title>{{ $t('commons.project') }}</template>
-            <ms-recent-list ref="projectRecent" :options="projectRecent"/>
-            <el-divider class="menu-divider"/>
-            <ms-show-all :index="'/api/project/all'"/>
-            <ms-create-button v-permission="['test_manager','test_user']" :index="'/api/project/create'"
-                              :title="$t('project.create')"/>
-          </el-submenu>
+          <el-menu-item v-show="$store.state.switch.value=='new'" :index="'/api/automation/report'">
+            {{ $t("i18n.report") }}
+          </el-menu-item>
 
-          <el-submenu v-permission="['test_manager','test_user','test_viewer']" index="4">
+          <el-submenu v-show="$store.state.switch.value=='old'"
+                      v-permission="['test_manager','test_user','test_viewer']" index="4">
             <template v-slot:title>{{ $t('commons.test') }}</template>
             <ms-recent-list ref="testRecent" :options="testRecent"/>
             <el-divider class="menu-divider"/>
@@ -34,7 +43,8 @@
                               :title="$t('load_test.create')"/>
           </el-submenu>
 
-          <el-submenu v-permission="['test_manager','test_user','test_viewer']" index="5">
+          <el-submenu v-show="$store.state.switch.value=='old'"
+                      v-permission="['test_manager','test_user','test_viewer']" index="5">
             <template v-slot:title>{{ $t('commons.report') }}</template>
             <ms-recent-list ref="reportRecent" :options="reportRecent"/>
             <el-divider class="menu-divider"/>
@@ -42,17 +52,12 @@
           </el-submenu>
 
 
-          <el-menu-item v-permission="['test_manager','test_user','test_viewer']" :index="'/api/monitor/view'">
+          <el-menu-item v-show="$store.state.switch.value=='old'"
+                        v-permission="['test_manager','test_user','test_viewer']" :index="'/api/monitor/view'">
             {{ $t('commons.monitor') }}
           </el-menu-item>
         </el-menu>
       </el-col>
-      <el-col :span="8">
-        <el-row type="flex" justify="center">
-          <ms-create-test :to="'/api/test/create'"/>
-        </el-row>
-      </el-col>
-      <el-col :span="6"/>
     </el-row>
   </div>
 
@@ -65,10 +70,11 @@ import MsShowAll from "../../common/head/ShowAll";
 import MsCreateButton from "../../common/head/CreateButton";
 import MsCreateTest from "../../common/head/CreateTest";
 import {ApiEvent, LIST_CHANGE} from "@/business/components/common/head/ListEvent";
+import SearchList from "@/business/components/common/head/SearchList";
 
 export default {
   name: "MsApiHeaderMenus",
-  components: {MsCreateTest, MsCreateButton, MsShowAll, MsRecentList},
+  components: {SearchList, MsCreateTest, MsCreateButton, MsShowAll, MsRecentList},
   data() {
     return {
       projectRecent: {
@@ -104,11 +110,11 @@ export default {
       apiTestProjectPath: '',
     }
   },
-  watch: {
-    '$route'(to) {
-      this.init();
-    }
-  },
+  // watch: {
+  //   '$route'(to) {
+  //     this.init();
+  //   },
+  // },
   methods: {
     registerEvents() {
       ApiEvent.$on(LIST_CHANGE, () => {
@@ -127,18 +133,17 @@ export default {
         this.isRouterAlive = true;
       });
     },
-    init() {
-      let path = this.$route.path;
-      if (path.indexOf("/api/test/list") >= 0 && !!this.$route.params.projectId) {
-        this.apiTestProjectPath = path;
-        //不激活项目菜单栏
-        this.isProjectActivation = false;
-        this.reload();
-      } else {
-        this.isProjectActivation = true;
-      }
-
-    },
+    // init() {
+    //   let path = this.$route.path;
+    //   if (path.indexOf("/api/test/list") >= 0 && !!this.$route.params.projectId) {
+    //     this.apiTestProjectPath = path;
+    //     //不激活项目菜单栏
+    //     this.isProjectActivation = false;
+    //     this.reload();
+    //   } else {
+    //     this.isProjectActivation = true;
+    //   }
+    // },
   },
   mounted() {
     this.registerEvents();
@@ -148,20 +153,20 @@ export default {
 </script>
 
 <style scoped>
-  #menu-bar {
-    border-bottom: 1px solid #E6E6E6;
-    background-color: #FFF;
-  }
+#menu-bar {
+  border-bottom: 1px solid #E6E6E6;
+  background-color: #FFF;
+}
 
-  .menu-divider {
-    margin: 0;
-  }
+.menu-divider {
+  margin: 0;
+}
 
-  .blank_item {
-    display: none;
-  }
+.blank_item {
+  display: none;
+}
 
-  .deactivation >>> .el-submenu__title {
-    border-bottom: white !important;
-  }
+.deactivation >>> .el-submenu__title {
+  border-bottom: white !important;
+}
 </style>

@@ -15,6 +15,9 @@
                 and test_case_review.name like CONCAT('%', #{request.name},'%')
             </if>
             and project.workspace_id = #{request.workspaceId}
+            <if test="request.projectId != null">
+                and test_case_review_project.project_id = #{request.projectId}
+            </if>
         </where>
         <if test="request.orders != null and request.orders.size() > 0">
             order by
@@ -32,6 +35,9 @@
             test_case_review.id = test_case_review_project.review_id
             and test_case_review_project.project_id = project.id
             and project.workspace_id = #{workspaceId}
+            <if test="projectId != null">
+                and test_case_review_project.project_id = #{projectId}
+            </if>
             and (
             (test_case_review_users.review_id = test_case_review.id
             and test_case_review_users.user_id = #{userId} )
@@ -51,6 +57,9 @@
             <if test="request.reviewerId != null">
                 and test_case_review_users.user_id = #{request.reviewerId}
             </if>
+            <if test="request.projectId != null">
+                and test_case_review_project.project_id = #{request.projectId}
+            </if>
             <if test="request.creator != null">
                 and (test_case_review.creator = #{request.creator}
                 <if test="request.reviewIds != null and request.reviewIds.size() > 0">
@@ -65,11 +74,16 @@
 
         order by test_case_review.update_time desc
     </select>
-    <select id="checkIsHave" resultType="java.lang.String">
-        select distinct review_id
-        from project, test_case_review_project
-        where project.id = test_case_review_project.project_id
-        and project.workspace_id = #{workspaceId}
-        and test_case_review_project.review_id = #{reviewId}
+    <select id="checkIsHave" resultType="int">
+        SELECT COUNT(1)
+        FROM project, test_case_review_project
+        WHERE project.id = test_case_review_project.project_id
+        <if test="workspaceIds != null and workspaceIds.size() > 0">
+            AND project.workspace_id IN
+            <foreach collection="workspaceIds" item="id" separator="," open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        AND test_case_review_project.review_id = #{reviewId}
     </select>
 </mapper>

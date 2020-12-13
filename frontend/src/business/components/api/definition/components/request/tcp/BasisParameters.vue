@@ -92,15 +92,15 @@
         </div>
         <div v-for="row in request.hashTree" :key="row.id" v-loading="isReloadData" style="margin-left: 20px;width: 100%">
           <!-- 前置脚本 -->
-          <ms-jsr233-processor v-if="row.label ==='JSR223 PreProcessor'" @remove="remove" :is-read-only="false" :title="$t('api_test.definition.request.pre_script')" style-type="color: #B8741A;background-color: #F9F1EA"
+          <ms-jsr233-processor v-if="row.label ==='JSR223 PreProcessor'" @copyRow="copyRow" @remove="remove" :is-read-only="false" :title="$t('api_test.definition.request.pre_script')" style-type="color: #B8741A;background-color: #F9F1EA"
                                :jsr223-processor="row"/>
           <!--后置脚本-->
-          <ms-jsr233-processor v-if="row.label ==='JSR223 PostProcessor'" @remove="remove" :is-read-only="false" :title="$t('api_test.definition.request.post_script')" style-type="color: #783887;background-color: #F2ECF3"
+          <ms-jsr233-processor v-if="row.label ==='JSR223 PostProcessor'" @copyRow="copyRow" @remove="remove" :is-read-only="false" :title="$t('api_test.definition.request.post_script')" style-type="color: #783887;background-color: #F2ECF3"
                                :jsr223-processor="row"/>
           <!--断言规则-->
-          <ms-api-assertions v-if="row.type==='Assertions'" @remove="remove" :is-read-only="isReadOnly" :assertions="row"/>
+          <ms-api-assertions v-if="row.type==='Assertions'" @copyRow="copyRow" @remove="remove" :is-read-only="isReadOnly" :assertions="row"/>
           <!--提取规则-->
-          <ms-api-extract :is-read-only="isReadOnly" @remove="remove" v-if="row.type==='Extract'" :extract="row"/>
+          <ms-api-extract :is-read-only="isReadOnly" @copyRow="copyRow" @remove="remove" v-if="row.type==='Extract'" :extract="row"/>
 
         </div>
       </el-col>
@@ -132,6 +132,7 @@
   import ApiEnvironmentConfig from "../../environment/ApiEnvironmentConfig";
   import {API_STATUS} from "../../../model/JsonData";
   import TCPSampler from "../../jmeter/components/sampler/tcp-sampler";
+  import {getCurrentProjectID, getUUID} from "@/common/js/utils";
 
   export default {
     name: "MsDatabaseConfig",
@@ -143,7 +144,6 @@
     props: {
       request: {},
       basisData: {},
-      currentProject: {},
       moduleOptions: Array,
       isReadOnly: {
         type: Boolean,
@@ -156,6 +156,7 @@
         classes: TCPSampler.CLASSES,
         isReloadData: false,
         options: API_STATUS,
+        currentProjectId: "",
         rules: {
           classname: [{required: true, message: "请选择TCPClient", trigger: 'change'}],
           server: [{required: true, message: this.$t('api_test.request.tcp.server_cannot_be_empty'), trigger: 'blur'}],
@@ -164,6 +165,7 @@
       }
     },
     created() {
+      this.currentProjectId = getCurrentProjectID();
       this.getEnvironments();
     },
     methods: {
@@ -192,6 +194,13 @@
         this.request.hashTree.splice(index, 1);
         this.reload();
       },
+      copyRow(row) {
+        let obj = {};
+        Object.assign(obj, row);
+        obj.id = getUUID();
+        this.request.hashTree.push(obj);
+        this.reload();
+      },
       reload() {
         this.isReloadData = true
         this.$nextTick(() => {
@@ -199,7 +208,7 @@
         })
       },
       validateApi() {
-        if (this.currentProject === null) {
+        if (this.currentProjectId === null) {
           this.$error(this.$t('api_test.select_project'), 2000);
           return;
         }
@@ -213,7 +222,7 @@
 
       },
       validate() {
-        if (this.currentProject === null) {
+        if (this.currentProjectId === null) {
           this.$error(this.$t('api_test.select_project'), 2000);
           return;
         }
@@ -224,9 +233,9 @@
         })
       },
       getEnvironments() {
-        if (this.currentProject) {
+        if (this.currentProjectId) {
           this.environments = [];
-          this.$get('/api/environment/list/' + this.currentProject.id, response => {
+          this.$get('/api/environment/list/' + this.currentProjectId, response => {
             this.environments = response.data;
             this.environments.forEach(environment => {
               parseEnvironment(environment);
@@ -236,11 +245,11 @@
         }
       },
       openEnvironmentConfig() {
-        if (!this.currentProject) {
+        if (!this.currentProjectId) {
           this.$error(this.$t('api_test.select_project'));
           return;
         }
-        this.$refs.environmentConfig.open(this.currentProject.id);
+        this.$refs.environmentConfig.open(this.currentProjectId);
       },
       initDataSource() {
         for (let i in this.environments) {

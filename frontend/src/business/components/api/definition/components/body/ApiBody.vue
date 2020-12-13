@@ -41,7 +41,7 @@
     </div>
 
     <div class="ms-body" v-if="body.type == 'XML'">
-      <ms-code-edit :read-only="isReadOnly" :data.sync="body.raw" :modes="modes" ref="codeEdit"/>
+      <ms-code-edit :read-only="isReadOnly" :data.sync="body.raw" :modes="modes" :mode="'xml'" ref="codeEdit"/>
     </div>
 
 
@@ -130,12 +130,14 @@
         })
         if (!isType) {
           this.headers.unshift(new KeyValue({name: "Content-Type", value: value}));
+          this.$emit('headersChange');
         }
       },
       removeContentType() {
         for (let index in this.headers) {
           if (this.headers[index].name === "Content-Type") {
             this.headers.splice(index, 1);
+            this.$emit('headersChange');
             return;
           }
         }
@@ -178,6 +180,11 @@
 
   .ace_editor {
     border-radius: 5px;
+  }
+
+  .el-radio-group {
+    margin: 10px 10px;
+    margin-top: 15px;
   }
 
 </style>

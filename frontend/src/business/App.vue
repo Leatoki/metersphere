@@ -46,6 +46,14 @@ export default {
       logoId: '_blank',
     }
   },
+  created() {
+    if (localStorage.getItem("store")) {
+      this.$store.replaceState(Object.assign({}, this.$store.state, JSON.parse(localStorage.getItem("store"))))
+    }
+    window.addEventListener("beforeunload", () => {
+      localStorage.setItem("store", JSON.stringify(this.$store.state))
+    })
+  },
   beforeCreate() {
     this.$get("/isLogin").then(response => {
       if (response.data.success) {
@@ -86,6 +94,7 @@ export default {
   background-color: rgb(44, 42, 72);
   color: rgb(245, 245, 245);
   font-size: 14px;
+  height: 40px;
 }
 
 .logo {

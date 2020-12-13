@@ -1,10 +1,10 @@
 <template>
   <el-card class="card-content">
-    <div style="background-color: white;">
+    <div class="ms-main-div">
       <el-row>
         <el-col>
           <!--操作按钮-->
-          <div style="float: right;margin-right: 20px">
+          <div class="ms-opt-btn">
             <el-button type="primary" size="small" @click="editScenario">{{$t('commons.save')}}</el-button>
           </div>
         </el-col>
@@ -79,8 +79,7 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="Tag" prop="tagId">
-              <el-select v-model="currentScenario.tagId" size="small" class="ms-scenario-input" placeholder="Tag"
-                         @change="tagChange" :multiple="true">
+              <el-select v-model="currentScenario.tagId" size="small" class="ms-scenario-input" placeholder="Tag" :multiple="true">
                 <el-option
                   v-for="item in tags"
                   :key="item.id"
@@ -119,16 +118,18 @@
         <el-row>
           <el-col :span="21">
             <!-- 调试部分 -->
-            <div style="margin-left: 20px;border:1px #DCDFE6 solid;border-radius: 4px;margin-right: 10px">
+            <div class="ms-debug-div">
               <el-row style="margin: 5px">
                 <el-col :span="6" class="ms-col-one">
                   {{currentScenario.name ===undefined || ''? $t('api_test.scenario.name') : currentScenario.name}}
                 </el-col>
                 <el-col :span="4" class="ms-col-one">
-                  {{$t('api_test.automation.step_total')}}:{{scenarioDefinition.length}}
+                  {{$t('api_test.automation.step_total')}}：{{scenarioDefinition.length}}
                 </el-col>
                 <el-col :span="4" class="ms-col-one">
-                  {{$t('api_test.automation.scenario_total')}}:
+                  <el-link style="font-size: 13px" @click="showScenarioParameters">{{$t('api_test.automation.scenario_total')}}：
+                    {{this.currentScenario.variables!=undefined?this.currentScenario.variables.length-1: 0}}
+                  </el-link>
                 </el-col>
                 <el-col :span="8">
                   {{$t('api_test.definition.request.run_env')}}:
@@ -166,26 +167,26 @@
                  <span class="custom-tree-node father" slot-scope="{ node, data}" style="width: 96%">
                     <template>
                       <!-- 场景 -->
-                      <ms-api-scenario-component v-if="data.type==='scenario'" :scenario="data" :node="node" @remove="remove"/>
+                      <ms-api-scenario-component v-if="data.type==='scenario'" :scenario="data" :node="node" @remove="remove" @copyRow="copyRow"/>
                       <!--条件控制器-->
-                      <ms-if-controller :controller="data" :node="node" v-if="data.type==='IfController'" @remove="remove"/>
+                      <ms-if-controller :controller="data" :node="node" v-if="data.type==='IfController'" @remove="remove" @copyRow="copyRow"/>
                       <!--等待控制器-->
-                      <ms-constant-timer :timer="data" :node="node" v-if="data.type==='ConstantTimer'" @remove="remove"/>
+                      <ms-constant-timer :timer="data" :node="node" v-if="data.type==='ConstantTimer'" @remove="remove" @copyRow="copyRow"/>
                       <!--自定义脚本-->
-                      <ms-jsr233-processor v-if="data.type==='JSR223Processor'" @remove="remove" :title="$t('api_test.automation.customize_script')"
+                      <ms-jsr233-processor v-if="data.type==='JSR223Processor'" @remove="remove" @copyRow="copyRow" :title="$t('api_test.automation.customize_script')"
                                            style-type="color: #7B4D12;background-color: #F1EEE9" :jsr223-processor="data" :node="node"/>
                       <!--前置脚本-->
-                      <ms-jsr233-processor v-if="data.type==='JSR223PreProcessor'" @remove="remove" :title="$t('api_test.definition.request.pre_script')"
+                      <ms-jsr233-processor v-if="data.type==='JSR223PreProcessor'" @remove="remove" @copyRow="copyRow" :title="$t('api_test.definition.request.pre_script')"
                                            style-type="color: #B8741A;background-color: #F9F1EA" :jsr223-processor="data" :node="node"/>
                       <!--后置脚本-->
-                      <ms-jsr233-processor v-if="data.type==='JSR223PostProcessor'" @remove="remove" :title="$t('api_test.definition.request.post_script')"
+                      <ms-jsr233-processor v-if="data.type==='JSR223PostProcessor'" @remove="remove" @copyRow="copyRow" :title="$t('api_test.definition.request.post_script')"
                                            style-type="color: #783887;background-color: #F2ECF3" :jsr223-processor="data" :node="node"/>
                       <!--断言规则-->
-                      <ms-api-assertions v-if="data.type==='Assertions'" @remove="remove" customizeStyle="margin-top: 0px" :assertions="data" :node="node"/>
+                      <ms-api-assertions v-if="data.type==='Assertions'" @remove="remove" @copyRow="copyRow" customizeStyle="margin-top: 0px" :assertions="data" :node="node"/>
                       <!--提取规则-->
-                      <ms-api-extract @remove="remove" v-if="data.type==='Extract'" customizeStyle="margin-top: 0px" :extract="data" :node="node"/>
+                      <ms-api-extract @remove="remove" @copyRow="copyRow" v-if="data.type==='Extract'" customizeStyle="margin-top: 0px" :extract="data" :node="node"/>
                       <!--API 导入 -->
-                      <ms-api-component :request="data" @remove="remove" current-project="currentProject" v-if="data.type==='HTTPSamplerProxy'||data.type==='DubboSampler'||data.type==='JDBCSampler'||data.type==='TCPSampler'" :node="node"/>
+                      <ms-api-component :request="data" @remove="remove" @copyRow="copyRow" v-if="data.type==='HTTPSamplerProxy'||data.type==='DubboSampler'||data.type==='JDBCSampler'||data.type==='TCPSampler'" :node="node"/>
                     </template>
                    </span>
               </el-tree>
@@ -197,37 +198,37 @@
               <el-button type="primary" icon="el-icon-refresh" size="small" @click="showAll">{{$t('commons.show_all')}}</el-button>
               <br/>
               <div v-if="operatingElements.indexOf('HTTPSamplerProxy')>0 || operatingElements.indexOf('DubboSampler')>0 || operatingElements.indexOf('JDBCSampler')>0 || operatingElements.indexOf('TCPSampler')>0 ">
-                <el-button class="ms-right-buttion" size="small" style="color: #F56C6C;background-color: #FCF1F1" @click="apiListImport">+{{$t('api_test.automation.api_list_import')}}</el-button>
+                <el-button class="ms-right-buttion ms-btn-1" size="small" @click="apiListImport">+{{$t('api_test.automation.api_list_import')}}</el-button>
               </div>
-              <div v-if="operatingElements.indexOf('OT_IMPORT')>0">
+              <!--<div v-if="operatingElements.indexOf('OT_IMPORT')>0">
                 <el-button class="ms-right-buttion" size="small" style="color: #409EFF;background-color: #EEF5FE" @click="addComponent('OT_IMPORT')">+{{$t('api_test.automation.external_import')}}</el-button>
-              </div>
+              </div>-->
               <div v-if="operatingElements.indexOf('ConstantTimer')>0">
-                <el-button class="ms-right-buttion" size="small" style="color: #67C23A;background-color: #F2F9EE" @click="addComponent('ConstantTimer')">+{{$t('api_test.automation.wait_controller')}}</el-button>
+                <el-button class="ms-right-buttion ms-btn-3" size="small" @click="addComponent('ConstantTimer')">+{{$t('api_test.automation.wait_controller')}}</el-button>
               </div>
               <div v-if="operatingElements.indexOf('IfController')>0">
-                <el-button class="ms-right-buttion" size="small" style="color: #E6A23C;background-color: #FCF6EE" @click="addComponent('IfController')">+{{$t('api_test.automation.if_controller')}}</el-button>
+                <el-button class="ms-right-buttion ms-btn-4" size="small" @click="addComponent('IfController')">+{{$t('api_test.automation.if_controller')}}</el-button>
               </div>
               <div v-if="operatingElements.indexOf('scenario')===0">
-                <el-button class="ms-right-buttion" size="small" style="color: #606266;background-color: #F4F4F5" @click="addComponent('scenario')">+{{$t('api_test.automation.scenario_import')}}</el-button>
+                <el-button class="ms-right-buttion ms-btn-5" size="small" @click="addComponent('scenario')">+{{$t('api_test.automation.scenario_import')}}</el-button>
               </div>
               <div v-if="operatingElements.indexOf('JSR223Processor')>0">
-                <el-button class="ms-right-buttion" size="small" style="color: #7B4D12;background-color: #F1EEE9" @click="addComponent('JSR223Processor')">+{{$t('api_test.automation.customize_script')}}</el-button>
+                <el-button class="ms-right-buttion ms-btn-6" size="small" @click="addComponent('JSR223Processor')">+{{$t('api_test.automation.customize_script')}}</el-button>
               </div>
               <div v-if="operatingElements.indexOf('CustomizeReq')>0">
-                <el-button class="ms-right-buttion" size="small" style="color: #008080;background-color: #EBF2F2" @click="addComponent('CustomizeReq')">+{{$t('api_test.automation.customize_req')}}</el-button>
+                <el-button class="ms-right-buttion ms-btn-7" size="small" @click="addComponent('CustomizeReq')">+{{$t('api_test.automation.customize_req')}}</el-button>
               </div>
               <div v-if="operatingElements.indexOf('JSR223PreProcessor')>0">
-                <el-button class="ms-right-buttion" size="small" style="color: #B8741A;background-color: #F9F1EA" @click="addComponent('JSR223PreProcessor')">+{{$t('api_test.definition.request.pre_script')}}</el-button>
+                <el-button class="ms-right-buttion ms-btn-8" size="small" @click="addComponent('JSR223PreProcessor')">+{{$t('api_test.definition.request.pre_script')}}</el-button>
               </div>
               <div v-if="operatingElements.indexOf('JSR223PostProcessor')>0">
-                <el-button class="ms-right-buttion" size="small" style="color: #783887;background-color: #F2ECF3" @click="addComponent('JSR223PostProcessor')">+{{$t('api_test.definition.request.post_script')}}</el-button>
+                <el-button class="ms-right-buttion ms-btn-9" size="small" @click="addComponent('JSR223PostProcessor')">+{{$t('api_test.definition.request.post_script')}}</el-button>
               </div>
               <div v-if="operatingElements.indexOf('Assertions')>0">
-                <el-button class="ms-right-buttion" size="small" style="color: #A30014;background-color: #F7E6E9" @click="addComponent('Assertions')">+{{$t('api_test.definition.request.assertions_rule')}}</el-button>
+                <el-button class="ms-right-buttion ms-btn-10" size="small" @click="addComponent('Assertions')">+{{$t('api_test.definition.request.assertions_rule')}}</el-button>
               </div>
               <div v-if="operatingElements.indexOf('Extract')>0">
-                <el-button class="ms-right-buttion" size="small" style="color: #015478;background-color: #E6EEF2" @click="addComponent('Extract')">+{{$t('api_test.definition.request.extract_param')}}</el-button>
+                <el-button class="ms-right-buttion ms-btn-11" size="small" @click="addComponent('Extract')">+{{$t('api_test.definition.request.extract_param')}}</el-button>
               </div>
             </el-col>
           </div>
@@ -236,14 +237,14 @@
 
       <!--接口列表-->
       <el-drawer :visible.sync="apiListVisible" :destroy-on-close="true" direction="ltr" :withHeader="false" :title="$t('api_test.automation.api_list_import')" :modal="false" size="90%">
-        <ms-api-definition :visible="true" :currentRow="currentRow"/>
-        <!--<el-button style="float: right;margin: 20px" type="primary" @click="copyApi('REF')">{{$t('api_test.scenario.reference')}}</el-button>-->
-        <el-button style="float: right;margin: 20px 0px 0px " type="primary" @click="copyApi('Copy')">{{ $t('commons.copy') }}</el-button>
+        <ms-api-definition :visible="visibleRef" :currentRow="currentRow"/>
+        <el-button style="float: right;margin: 0px 20px 0px" type="primary" @click="copyApi('REF')">{{$t('api_test.scenario.reference')}}</el-button>
+        <el-button style="float: right;" type="primary" @click="copyApi('Copy')">{{ $t('commons.copy') }}</el-button>
       </el-drawer>
 
       <!--自定义接口-->
       <el-drawer :visible.sync="customizeVisible" :destroy-on-close="true" direction="ltr" :withHeader="false" :title="$t('api_test.automation.customize_req')" style="overflow: auto" :modal="false" size="90%">
-        <ms-api-customize :request="customizeRequest" @addCustomizeApi="addCustomizeApi" :current-project="currentProject"/>
+        <ms-api-customize :request="customizeRequest" @addCustomizeApi="addCustomizeApi"/>
         <!--<el-button style="float: right;margin: 20px" @click="addCustomizeApi">{{$t('commons.save')}}</el-button>-->
       </el-drawer>
       <!--场景导入 -->
@@ -260,9 +261,12 @@
       <ms-run :debug="true" :environment="currentEnvironmentId" :reportId="reportId" :run-data="debugData"
               @runRefresh="runRefresh" ref="runTest"/>
       <!-- 调试结果 -->
-      <el-drawer :visible.sync="debugVisible" :destroy-on-close="true" direction="ltr" :withHeader="false" :title="$t('test_track.plan_view.test_result')" :modal="false" size="90%">
-        <ms-api-report-detail :report-id="reportId"/>
+      <el-drawer :visible.sync="debugVisible" :destroy-on-close="true" direction="ltr" :withHeader="true" :modal="false" size="90%">
+        <ms-api-report-detail :report-id="reportId" :debug="true" :currentProjectId="projectId"/>
       </el-drawer>
+
+      <!--场景公共参数-->
+      <ms-scenario-parameters :currentScenario="currentScenario" @addParameters="addParameters" ref="scenarioParameters"/>
     </div>
   </el-card>
 </template>
@@ -277,27 +281,34 @@
   import MsIfController from "./IfController";
   import MsApiAssertions from "../../definition/components/assertion/ApiAssertions";
   import MsApiExtract from "../../definition/components/extract/ApiExtract";
-  import MsApiDefinition from "../../definition/ApiDefinition";
+  import MsApiDefinition from "./api/ApiDefinition";
   import MsApiComponent from "./ApiComponent";
   import {ELEMENTS, ELEMENT_TYPE} from "./Setting";
   import MsApiCustomize from "./ApiCustomize";
-  import {getUUID} from "@/common/js/utils";
+  import {getUUID, getCurrentProjectID} from "@/common/js/utils";
   import ApiEnvironmentConfig from "../../definition/components/environment/ApiEnvironmentConfig";
   import MsAddTag from "./AddTag";
-  import MsRun from "./Run";
+  import MsRun from "./DebugRun";
   import MsImportApiScenario from "./ImportApiScenario";
   import MsApiScenarioComponent from "./ApiScenarioComponent";
   import MsApiReportDetail from "../report/ApiReportDetail";
-
+  import MsScenarioParameters from "./ScenarioParameters";
 
   export default {
     name: "EditApiScenario",
     props: {
       moduleOptions: Array,
-      currentProject: {},
       currentScenario: {},
     },
-    components: {ApiEnvironmentConfig, MsApiReportDetail, MsAddTag, MsRun, MsApiScenarioComponent, MsImportApiScenario, MsJsr233Processor, MsConstantTimer, MsIfController, MsApiAssertions, MsApiExtract, MsApiDefinition, MsApiComponent, MsApiCustomize},
+    components: {
+      ApiEnvironmentConfig, MsScenarioParameters,
+      MsApiReportDetail, MsAddTag, MsRun,
+      MsApiScenarioComponent, MsImportApiScenario,
+      MsJsr233Processor, MsConstantTimer,
+      MsIfController, MsApiAssertions,
+      MsApiExtract, MsApiDefinition,
+      MsApiComponent, MsApiCustomize
+    },
     data() {
       return {
         props: {
@@ -312,6 +323,7 @@
           userId: [{required: true, message: this.$t('test_track.case.input_maintainer'), trigger: 'change'}],
           apiScenarioModuleId: [{required: true, message: this.$t('test_track.case.input_module'), trigger: 'change'}],
           status: [{required: true, message: this.$t('commons.please_select'), trigger: 'change'}],
+          principal: [{required: true, message: this.$t('api_test.definition.request.responsible'), trigger: 'change'}],
         },
         environments: [],
         tags: [],
@@ -328,16 +340,19 @@
         debugVisible: false,
         customizeRequest: {protocol: "HTTP", type: "API", hashTree: [], referenced: 'Created', active: false},
         operatingElements: [],
-        currentRow: {cases: [], apis: []},
+        currentRow: {cases: [], apis: [], referenced: true},
         selectedTreeNode: undefined,
         expandedNode: [],
         scenarioDefinition: [],
         path: "/api/automation/create",
-        debugData: [],
+        debugData: {},
         reportId: "",
+        projectId: "",
+        visibleRef: "",
       }
     },
     created() {
+      this.projectId = getCurrentProjectID();
       this.operatingElements = ELEMENTS.get("ALL");
       this.getMaintainerOptions();
       this.refreshTags();
@@ -346,38 +361,6 @@
     },
     watch: {},
     methods: {
-      nodeClick(e) {
-        if (e.referenced != 'REF') {
-          this.operatingElements = ELEMENTS.get(e.type);
-        } else {
-          this.operatingElements = [];
-        }
-        this.selectedTreeNode = e;
-      },
-      showAll() {
-        this.operatingElements = ELEMENTS.get("ALL");
-        this.selectedTreeNode = undefined;
-        this.reload();
-      },
-      apiListImport() {
-        this.apiListVisible = true;
-      },
-      recursiveSorting(arr) {
-        for (let i in arr) {
-          arr[i].index = Number(i) + 1;
-          if (arr[i].hashTree != undefined && arr[i].hashTree.length > 0) {
-            this.recursiveSorting(arr[i].hashTree);
-          }
-        }
-      },
-      sort() {
-        for (let i in this.scenarioDefinition) {
-          this.scenarioDefinition[i].index = Number(i) + 1;
-          if (this.scenarioDefinition[i].hashTree != undefined && this.scenarioDefinition[i].hashTree.length > 0) {
-            this.recursiveSorting(this.scenarioDefinition[i].hashTree);
-          }
-        }
-      },
       addComponent(type) {
         switch (type) {
           case ELEMENT_TYPE.IfController:
@@ -421,8 +404,42 @@
         this.sort();
         this.reload();
       },
+      nodeClick(e) {
+        if (e.referenced != 'REF' && e.referenced != 'Deleted') {
+          this.operatingElements = ELEMENTS.get(e.type);
+        } else {
+          this.operatingElements = [];
+        }
+        this.selectedTreeNode = e;
+      },
+      showAll() {
+        this.operatingElements = ELEMENTS.get("ALL");
+        this.selectedTreeNode = undefined;
+        this.reload();
+      },
+      apiListImport() {
+        this.visibleRef = getUUID();
+        this.apiListVisible = true;
+      },
+      recursiveSorting(arr) {
+        for (let i in arr) {
+          arr[i].index = Number(i) + 1;
+          if (arr[i].hashTree != undefined && arr[i].hashTree.length > 0) {
+            this.recursiveSorting(arr[i].hashTree);
+          }
+        }
+      },
+      sort() {
+        for (let i in this.scenarioDefinition) {
+          this.scenarioDefinition[i].index = Number(i) + 1;
+          if (this.scenarioDefinition[i].hashTree != undefined && this.scenarioDefinition[i].hashTree.length > 0) {
+            this.recursiveSorting(this.scenarioDefinition[i].hashTree);
+          }
+        }
+      },
       addCustomizeApi(request) {
         this.customizeVisible = false;
+        request.enable === undefined ? request.enable = true : request.enable;
         if (this.selectedTreeNode != undefined) {
           this.selectedTreeNode.hashTree.push(request);
         } else {
@@ -435,6 +452,7 @@
       addScenario(arr) {
         if (arr.length > 0) {
           arr.forEach(item => {
+            item.enable === undefined ? item.enable = true : item.enable;
             this.scenarioDefinition.push(item);
           })
         }
@@ -455,6 +473,7 @@
             request = item.request;
           }
           request.referenced = referenced;
+          request.enable === undefined ? request.enable = true : request.enable;
           request.active = false;
           request.resourceId = getUUID();
           if (referenced === 'REF') {
@@ -474,6 +493,7 @@
             request = item.request;
           }
           request.referenced = referenced;
+          request.enable === undefined ? request.enable = true : request.enable;
           request.active = false;
           request.resourceId = getUUID();
           if (referenced === 'REF') {
@@ -495,18 +515,15 @@
           this.maintainerOptions = response.data;
         });
       },
-      tagChange() {
-
-      },
       openTagConfig() {
-        if (!this.currentProject) {
+        if (!this.projectId) {
           this.$error(this.$t('api_test.select_project'));
           return;
         }
-        this.$refs.tag.open(this.currentProject.id);
+        this.$refs.tag.open();
       },
       refreshTags() {
-        let obj = {projectId: this.currentProject.id};
+        let obj = {projectId: this.projectId};
         let tagIds = [];
         this.$post('/api/tag/list', obj, response => {
           this.tags = response.data;
@@ -527,6 +544,16 @@
         this.sort();
         this.reload();
       },
+      copyRow(row, node) {
+        const parent = node.parent
+        const hashTree = parent.data.hashTree || parent.data;
+        let obj = {};
+        Object.assign(obj, row);
+        obj.resourceId = getUUID();
+        hashTree.push(obj);
+        this.sort();
+        this.reload();
+      },
       reload() {
         this.isReloadData = true
         this.$nextTick(() => {
@@ -539,14 +566,16 @@
           this.$error(this.$t('api_test.environment.select_environment'));
           return;
         }
-        let scenario = {id: this.currentScenario.id, name: this.currentScenario.name, type: "scenario", referenced: 'Created', environmentId: this.currentEnvironmentId, hashTree: this.scenarioDefinition};
-        this.debugData = [];
-        this.debugData.push(scenario);
+        this.debugData = {
+          id: this.currentScenario.id, name: this.currentScenario.name, type: "scenario",
+          variables: this.currentScenario.variables, referenced: 'Created',
+          environmentId: this.currentEnvironmentId, hashTree: this.scenarioDefinition
+        };
         this.reportId = getUUID().substring(0, 8);
       },
       getEnvironments() {
-        if (this.currentProject) {
-          this.$get('/api/environment/list/' + this.currentProject.id, response => {
+        if (this.projectId) {
+          this.$get('/api/environment/list/' + this.projectId, response => {
             this.environments = response.data;
             this.environments.forEach(environment => {
               parseEnvironment(environment);
@@ -555,11 +584,11 @@
         }
       },
       openEnvironmentConfig() {
-        if (!this.currentProject) {
+        if (!this.projectId) {
           this.$error(this.$t('api_test.select_project'));
           return;
         }
-        this.$refs.environmentConfig.open(this.currentProject.id);
+        this.$refs.environmentConfig.open(this.projectId);
       },
       environmentConfigClose() {
         this.getEnvironments();
@@ -592,11 +621,65 @@
         });
         return path[0].path;
       },
+      setFiles(item, bodyUploadFiles, obj) {
+        if (item.body) {
+          item.body.kvs.forEach(param => {
+            if (param.files) {
+              param.files.forEach(item => {
+                if (item.file) {
+                  if (!item.id) {
+                    let fileId = getUUID().substring(0, 12);
+                    item.name = item.file.name;
+                    item.id = fileId;
+                  }
+                  obj.bodyUploadIds.push(item.id);
+                  bodyUploadFiles.push(item.file);
+                }
+              });
+            }
+          });
+          item.body.binary.forEach(param => {
+            if (param.files) {
+              param.files.forEach(item => {
+                if (item.file) {
+                  if (!item.id) {
+                    let fileId = getUUID().substring(0, 12);
+                    item.name = item.file.name;
+                    item.id = fileId;
+                  }
+                  obj.bodyUploadIds.push(item.id);
+                  bodyUploadFiles.push(item.file);
+                }
+              });
+            }
+          });
+        }
+      },
+      recursiveFile(arr, bodyUploadFiles, obj) {
+        arr.forEach(item => {
+          this.setFiles(item, bodyUploadFiles, obj);
+          if (item.hashTree != undefined && item.hashTree.length > 0) {
+            this.recursiveFile(item.hashTree, bodyUploadFiles, obj);
+          }
+        });
+      },
+      getBodyUploadFiles(obj) {
+        let bodyUploadFiles = [];
+        obj.bodyUploadIds = [];
+        this.scenarioDefinition.forEach(item => {
+          this.setFiles(item, bodyUploadFiles, obj);
+          if (item.hashTree != undefined && item.hashTree.length > 0) {
+            this.recursiveFile(item.hashTree, bodyUploadFiles, obj);
+          }
+        })
+        return bodyUploadFiles;
+      },
       editScenario() {
         this.$refs['currentScenario'].validate((valid) => {
           if (valid) {
             this.setParameter();
-            this.result = this.$post(this.path, this.currentScenario, () => {
+            let bodyFiles = this.getBodyUploadFiles(this.currentScenario);
+            this.$fileUpload(this.path, null, bodyFiles, this.currentScenario, () => {
               this.$success(this.$t('commons.save_success'));
               this.path = "/api/automation/update";
               this.currentScenario.tagId = JSON.parse(this.currentScenario.tagId);
@@ -614,23 +697,29 @@
               this.path = "/api/automation/update";
               if (response.data.scenarioDefinition != null) {
                 let obj = JSON.parse(response.data.scenarioDefinition);
-                this.currentEnvironmentId = obj.environmentId;
-                this.scenarioDefinition = obj.hashTree;
+                if (obj) {
+                  this.currentEnvironmentId = obj.environmentId;
+                  this.currentScenario.variables = obj.variables;
+                  this.scenarioDefinition = obj.hashTree;
+                }
               }
             }
           })
         }
       },
       setParameter() {
-        this.currentScenario.projectId = this.currentProject.id;
+        this.currentScenario.projectId = this.projectId;
         if (!this.currentScenario.id) {
           this.currentScenario.id = getUUID();
         }
         this.currentScenario.stepTotal = this.scenarioDefinition.length;
         this.currentScenario.modulePath = this.getPath(this.currentScenario.apiScenarioModuleId);
         // 构建一个场景对象 方便引用处理
-        let scenario = {id: this.currentScenario.id, name: this.currentScenario.name, type: "scenario", referenced: 'Created', environmentId: this.currentEnvironmentId, hashTree: this.scenarioDefinition};
-        this.currentScenario.scenarioDefinition = JSON.stringify(scenario);
+        let scenario = {
+          id: this.currentScenario.id, name: this.currentScenario.name, variables: this.currentScenario.variables,
+          type: "scenario", referenced: 'Created', environmentId: this.currentEnvironmentId, hashTree: this.scenarioDefinition
+        };
+        this.currentScenario.scenarioDefinition = scenario;
         this.currentScenario.tagId = JSON.stringify(this.currentScenario.tagId);
         if (this.currentModule != null) {
           this.currentScenario.modulePath = this.currentModule.method !== undefined ? this.currentModule.method : null;
@@ -640,6 +729,13 @@
       runRefresh() {
         this.debugVisible = true;
         this.isReloadData = false;
+      },
+      showScenarioParameters() {
+        this.$refs.scenarioParameters.open(this.currentScenario.variables);
+      },
+      addParameters(data) {
+        this.currentScenario.variables = data;
+        this.reload();
       }
     }
   }
@@ -648,6 +744,22 @@
 <style scoped>
   .ms-scenario-input {
     width: 100%;
+  }
+
+  .ms-main-div {
+    background-color: white;
+  }
+
+  .ms-opt-btn {
+    float: right;
+    margin-right: 20px;
+  }
+
+  .ms-debug-div {
+    margin-left: 20px;
+    border: 1px #DCDFE6 solid;
+    border-radius: 4px;
+    margin-right: 10px;
   }
 
   .ms-scenario-button {
@@ -677,6 +789,61 @@
     margin-top: 10px;
   }
 
+  .ms-btn-1 {
+    color: #F56C6C;
+    background-color: #FCF1F1
+  }
+
+  .ms-btn-2 {
+    color: #F56C6C;
+    background-color: #FCF1F1
+  }
+
+  .ms-btn-3 {
+    color: #67C23A;
+    background-color: #F2F9EE
+  }
+
+  .ms-btn-4 {
+    color: #E6A23C;
+    background-color: #FCF6EE
+  }
+
+  .ms-btn-5 {
+    color: #606266;
+    background-color: #F4F4F5
+  }
+
+  .ms-btn-6 {
+    color: #7B4D12;
+    background-color: #F1EEE9
+  }
+
+  .ms-btn-7 {
+    color: #008080;
+    background-color: #EBF2F2
+  }
+
+  .ms-btn-8 {
+    color: #B8741A;
+    background-color: #F9F1EA
+  }
+
+  .ms-btn-9 {
+    color: #783887;
+    background-color: #F2ECF3
+  }
+
+  .ms-btn-10 {
+    color: #A30014;
+    background-color: #F7E6E9
+  }
+
+  .ms-btn-11 {
+    color: #015478;
+    background-color: #E6EEF2
+  }
+
   /deep/ .el-tree-node__content {
     height: 100%;
     margin-top: 8px;
@@ -691,4 +858,10 @@
     overflow: auto;
   }
 
+  /deep/ .el-step__icon.is-text {
+    border: 1px solid;
+  }
+  /deep/.el-drawer__header{
+    margin-bottom: 0px;
+  }
 </style>

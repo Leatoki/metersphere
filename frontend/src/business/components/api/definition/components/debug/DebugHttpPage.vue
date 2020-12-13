@@ -50,8 +50,7 @@
   import {getUUID, getCurrentUser} from "@/common/js/utils";
   import MsResponseText from "../response/ResponseText";
   import MsRun from "../Run";
-  import {createComponent, Request} from "../jmeter/components";
-  import HeaderManager from "../jmeter/components/configurations/header-manager";
+  import {createComponent} from "../jmeter/components";
   import {REQ_METHOD} from "../../model/JsonData";
   import MsRequestResultTail from "../response/RequestResultTail";
 
@@ -60,6 +59,7 @@
     components: {MsRequestResultTail, MsResponseResult, MsApiRequestForm, MsRequestMetric, MsResponseText, MsRun},
     props: {
       currentProtocol: String,
+      testCase: {},
       scenario: Boolean,
     },
     data() {
@@ -80,12 +80,32 @@
       }
     },
     created() {
-      this.createHttp();
+      if (this.testCase) {
+        // 执行结果信息
+        let url = "/api/definition/report/getReport/" + this.testCase.id;
+        this.$get(url, response => {
+          if (response.data) {
+            let data = JSON.parse(response.data.content);
+            this.responseData = data;
+          }
+        });
+        this.request = this.testCase.request;
+        if (this.request) {
+          this.debugForm.method = this.request.method;
+          if (this.request.url) {
+            this.debugForm.url = this.request.url;
+          } else {
+            this.debugForm.url = this.request.path;
+          }
+        }
+      } else {
+        this.createHttp();
+      }
     },
     watch: {
       debugResultId() {
         this.getResult()
-      }
+      },
     },
     methods: {
       handleCommand(e) {
@@ -120,7 +140,7 @@
       saveAs() {
         this.$refs['debugForm'].validate((valid) => {
           if (valid) {
-            this.debugForm.request = JSON.stringify(this.request);
+            this.debugForm.request = this.request;
             this.debugForm.userId = getCurrentUser().id;
             this.debugForm.status = "Underway";
             this.debugForm.protocol = this.currentProtocol;

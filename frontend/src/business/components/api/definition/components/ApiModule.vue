@@ -1,12 +1,6 @@
 <template>
-  <div>
-    <select-menu
-      :data="projects"
-      :current-data="currentProject"
-      :title="$t('test_track.project')"
-      @dataChange="changeProject" style="margin-bottom: 20px"/>
-
-    <el-select style="width: 100px ;height: 30px" size="small" v-model="protocol" @change="changeProtocol">
+  <div v-loading="result.loading">
+    <el-select class="protocol-select" size="small" v-model="protocol" @change="changeProtocol">
       <el-option
         v-for="item in options"
         :key="item.value"
@@ -15,10 +9,10 @@
         :disabled="item.disabled">
       </el-option>
     </el-select>
-    <el-input style="width: 175px; padding-left: 3px" :placeholder="$t('test_track.module.search')" v-model="filterText"
+    <el-input class="filter-input" :placeholder="$t('test_track.module.search')" v-model="filterText"
               size="small">
       <template v-slot:append>
-        <el-dropdown size="small" split-button type="primary" class="ms-api-buttion" @click="handleCommand('add-api')"
+        <el-dropdown size="small" split-button type="primary" class="ms-api-button" @click="handleCommand('add-api')"
                      @command="handleCommand">
           <el-button icon="el-icon-folder-add" @click="addApi"></el-button>
           <el-dropdown-menu slot="dropdown">
@@ -95,7 +89,7 @@
     </el-tree>
 
     <ms-add-basis-api :current-protocol="protocol" ref="basisApi"></ms-add-basis-api>
-    <api-import ref="apiImport" :project-id="currentProject.id" @refresh="refresh"/>
+    <api-import ref="apiImport" :project-id="projectId" @refresh="refresh"/>
 
   </div>
 
@@ -106,6 +100,7 @@
   import SelectMenu from "../../../track/common/SelectMenu";
   import {OPTIONS, DEFAULT_DATA} from "../model/JsonData";
   import ApiImport from "./import/ApiImport";
+  import {getCurrentProjectID} from "@/common/js/utils";
 
   export default {
     name: 'MsApiModule',
@@ -116,49 +111,43 @@
     },
     data() {
       return {
+        result: {},
         options: OPTIONS,
         protocol: OPTIONS[0].value,
         httpVisible: false,
         expandedNode: [],
         filterText: "",
         nextFlag: true,
-        currentProject: {},
-        projects: [],
+        projectId: "",
         data: DEFAULT_DATA,
         currentModule: {},
         newLabel: ""
       }
     },
     mounted() {
-      this.getProjects();
+      this.projectId = getCurrentProjectID();
       this.changeProtocol();
     },
     watch: {
-      currentProject() {
-        this.getApiModuleTree();
-        this.$emit('changeProject', this.currentProject);
-      },
       filterText(val) {
         this.$refs.tree.filter(val);
       }
     },
     methods: {
       getApiModuleTree() {
-        if (this.currentProject) {
-          if (this.expandedNode.length === 0) {
-            this.expandedNode.push("root");
-          }
-          this.$get("/api/module/list/" + this.currentProject.id + "/" + this.protocol, response => {
-            if (response.data != undefined && response.data != null) {
-              this.data[1].children = response.data;
-              let moduleOptions = [];
-              this.data[1].children.forEach(node => {
-                this.buildNodePath(node, {path: ''}, moduleOptions);
-              });
-              this.$emit('getApiModuleTree', moduleOptions);
-            }
-          });
+        if (this.expandedNode.length === 0) {
+          this.expandedNode.push("root");
         }
+        this.result = this.$get("/api/module/list/" + this.projectId + "/" + this.protocol, response => {
+          if (response.data != undefined && response.data != null) {
+            this.data[1].children = response.data;
+            let moduleOptions = [];
+            this.data[1].children.forEach(node => {
+              this.buildNodePath(node, {path: ''}, moduleOptions);
+            });
+            this.$emit('getApiModuleTree', moduleOptions);
+          }
+        });
       },
       handleCommand(e) {
         switch (e) {
@@ -363,7 +352,7 @@
       },
       // 保存或修改
       editApiModule(node, data) {
-        if (!this.currentProject) {
+        if (!this.projectId) {
           this.$error("$t('api_test.select_project')");
           return;
         }
@@ -382,7 +371,7 @@
           data.nodeIds = ids;
         }
         data.protocol = this.protocol;
-        data.projectId = this.currentProject.id;
+        data.projectId = this.projectId;
         this.$post(url, data, () => {
           this.$success(this.$t('commons.save_success'));
           this.getApiModuleTree();
@@ -409,6 +398,7 @@
       },
       refresh(data) {
         this.$emit('refresh', data);
+        this.getApiModuleTree();
       },
       saveAsEdit(data) {
         this.$emit('saveAsEdit', data);
@@ -418,20 +408,7 @@
         return data.name.indexOf(value) !== -1;
       },
       addApi() {
-        this.$refs.basisApi.open(this.currentModule, this.currentProject.id);
-      },
-      // 项目相关方法
-      changeProject(project) {
-        this.currentProject = project;
-      },
-      getProjects() {
-        let projectId;
-        this.$get("/project/listAll", (response) => {
-          this.projects = response.data;
-          if (this.projects.length > 0) {
-            this.currentProject = this.projects[0];
-          }
-        });
+        this.$refs.basisApi.open(this.currentModule, this.projectId);
       },
       nodeExpand(data) {
         if (data.id) {
@@ -498,7 +475,31 @@
     height: 33px;
   }
 
-  .ms-api-buttion {
+  .ms-api-button {
     width: 30px;
   }
+
+  .protocol-select {
+    width: 95px;
+    height: 30px;
+  }
+
+  .filter-input {
+    width: 175px;
+    padding-left: 3px;
+  }
+
+  .ms-api-button .el-button {
+    padding: 10px;
+  }
+
+  .filter-input >>> .el-input-group__append {
+    padding-right: 10px;
+  }
+
+  .protocol-select >>> .el-input--small {
+    font-size: 10px;
+    width: 90px;
+  }
+
 </style>

@@ -70,11 +70,12 @@
     </el-card>
 
     <!-- 加载用例 -->
-    <el-drawer :visible.sync="visible" direction="btt" :with-header="false" :modal="false" size="50%">
-      <ms-api-case-list @apiCaseClose="apiCaseClose" @selectTestCase="selectTestCase" :api="api" :refreshSign="refreshSign"
-                        :currentProject="currentProject" :loaded="loaded"
-                        ref="caseList"/>
-    </el-drawer>
+    <ms-api-case-list @selectTestCase="selectTestCase"
+                      :loaded="loaded"
+                      :refreshSign="refreshSign"
+                      :createCase="createCase"
+                      :currentApi="api"
+                      ref="caseList"/>
 
     <!-- 环境 -->
     <api-environment-config ref="environmentConfig" @close="environmentConfigClose"/>
@@ -87,14 +88,13 @@
 
 <script>
   import MsApiRequestForm from "../request/http/ApiRequestForm";
-  import {downloadFile, getUUID} from "@/common/js/utils";
+  import {downloadFile, getUUID, getCurrentProjectID} from "@/common/js/utils";
   import MsApiCaseList from "../ApiCaseList";
   import MsContainer from "../../../../common/components/MsContainer";
   import {parseEnvironment} from "../../model/EnvironmentModel";
   import ApiEnvironmentConfig from "../environment/ApiEnvironmentConfig";
   import MsRequestResultTail from "../response/RequestResultTail";
   import MsRun from "../Run";
-
   import {REQ_METHOD} from "../../model/JsonData";
 
   export default {
@@ -113,8 +113,9 @@
         api: {},
         loaded: false,
         loading: false,
+        createCase: "",
         currentRequest: {},
-        refreshSign:"",
+        refreshSign: "",
         responseData: {type: 'HTTP', responseResult: {}, subRequestResults: []},
         reqOptions: REQ_METHOD,
         environments: [],
@@ -125,9 +126,10 @@
         },
         runData: [],
         reportId: "",
+        projectId: "",
       }
     },
-    props: {apiData: {}, currentProject: {}, currentProtocol: String,},
+    props: {apiData: {}, currentProtocol: String,},
     methods: {
       handleCommand(e) {
         switch (e) {
@@ -167,7 +169,7 @@
       loadCase() {
         this.refreshSign = getUUID();
         this.loaded = true;
-        this.visible = true;
+        this.$refs.caseList.open();
       },
       apiCaseClose() {
         this.visible = false;
@@ -194,7 +196,9 @@
         return bodyUploadFiles;
       },
       saveAsCase() {
-        this.visible = false;
+        //用于触发创建操作
+        this.createCase = getUUID();
+        this.$refs.caseList.open();
         this.loaded = false;
       },
       saveAsApi() {
@@ -223,8 +227,8 @@
         }
       },
       getEnvironments() {
-        if (this.currentProject) {
-          this.$get('/api/environment/list/' + this.currentProject.id, response => {
+        if (this.projectId) {
+          this.$get('/api/environment/list/' + this.projectId, response => {
             this.environments = response.data;
             this.environments.forEach(environment => {
               parseEnvironment(environment);
@@ -232,7 +236,7 @@
             let hasEnvironment = false;
             for (let i in this.environments) {
               if (this.environments[i].id === this.api.environmentId) {
-                this.api.environment = this.environments[i];
+                this.api.environmentId = this.environments[i];
                 hasEnvironment = true;
                 break;
               }
@@ -248,16 +252,17 @@
         }
       },
       openEnvironmentConfig() {
-        if (!this.currentProject) {
+        if (!this.projectId) {
           this.$error(this.$t('api_test.select_project'));
           return;
         }
-        this.$refs.environmentConfig.open(this.currentProject.id);
+        this.$refs.environmentConfig.open(this.projectId);
       },
       environmentChange(value) {
         for (let i in this.environments) {
           if (this.environments[i].id === value) {
-            this.api.request.useEnvironment = this.environments[i].id;
+            this.api.environmentId = value;
+            this.api.request.useEnvironment = value;
             break;
           }
         }
@@ -276,6 +281,7 @@
       }
     },
     created() {
+      this.projectId = getCurrentProjectID();
       this.api = this.apiData;
       this.api.protocol = this.currentProtocol;
       this.currentRequest = this.api.request;
@@ -301,7 +307,8 @@
     border-radius: 4px;
     border-left: 4px solid #783887;
   }
-  /deep/.el-drawer{
+
+  /deep/ .el-drawer {
     overflow: auto;
   }
 </style>

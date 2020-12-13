@@ -2,13 +2,18 @@
   <div v-loading="loading">
     <el-card>
       <el-row>
-        <div class="el-step__icon is-text ms-api-col" style="float: left">
+        <div class="el-step__icon is-text ms-api-col">
           <div class="el-step__icon-inner">{{scenario.index}}</div>
         </div>
-        <div style="margin-left: 20px;float: left"> {{scenario.name}}</div>
-        <el-tag size="mini" style="margin-left: 20px" v-if="scenario.referenced==='Deleted'" type="danger">引用不存在</el-tag>
+        <el-button class="ms-title-buttion" size="small">{{$t('api_test.automation.scenario_import')}}</el-button>
+        {{scenario.name}}
+        <el-tag size="mini" style="margin-left: 20px" v-if="scenario.referenced==='Deleted'" type="danger">{{$t('api_test.automation.reference_deleted')}}</el-tag>
         <el-tag size="mini" style="margin-left: 20px" v-if="scenario.referenced==='REF'">{{ $t('api_test.scenario.reference') }}</el-tag>
-        <el-button size="mini" type="danger" icon="el-icon-delete" circle @click="remove" style="margin-right: 20px; float: right"/>
+        <div style="margin-right: 20px; float: right">
+          <el-switch v-model="scenario.enable" style="margin-left: 10px"/>
+          <el-button size="mini" icon="el-icon-copy-document" circle @click="copyRow" style="margin-left: 10px"/>
+          <el-button size="mini" icon="el-icon-delete" type="danger" circle @click="remove" style="margin-left: 10px"/>
+        </div>
       </el-row>
     </el-card>
   </div>
@@ -25,7 +30,6 @@
     props: {
       scenario: {},
       node: {},
-      currentProject: {},
     },
     watch: {},
     created() {
@@ -52,6 +56,9 @@
         item.active = !item.active;
         this.reload();
       },
+      copyRow() {
+        this.$emit('copyRow', this.scenario, this.node);
+      },
       reload() {
         this.loading = true
         this.$nextTick(() => {
@@ -70,15 +77,14 @@
     color: #606266;
   }
 
-  .ms-api-col-create {
-    background-color: #EBF2F2;
-    border-color: #008080;
-    margin-right: 10px;
-    color: #008080;
-  }
-
   /deep/ .el-card__body {
     padding: 15px;
+  }
+
+  .ms-title-buttion {
+    background-color: #F4F4F5;
+    margin-right: 20px;
+    color: #606266;
   }
 
   .icon.is-active {

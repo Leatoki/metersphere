@@ -14,10 +14,9 @@
       </el-form>
       <!--不同协议请求-->
       <ms-debug-http-page :scenario="true" :current-api="request" @saveAs="editApi" :currentProtocol="request.protocol" v-if="request.protocol==='HTTP'"/>
-      <ms-debug-jdbc-page :scenario="true" :currentProtocol="request.protocol" @saveAs="editApi" :currentProject="currentProject" v-if="request.protocol==='SQL'"/>
-      <ms-debug-tcp-page :scenario="true" :currentProtocol="request.protocol" @saveAs="editApi" :currentProject="currentProject" v-if="request.protocol==='TCP'"/>
-      <ms-debug-dubbo-page :scenario="true" :currentProtocol="request.protocol" @saveAs="editApi" :currentProject="currentProject" v-if="request.protocol==='DUBBO'"/>
-
+      <ms-debug-jdbc-page :scenario="true" :currentProtocol="request.protocol" @saveAs="editApi" v-if="request.protocol==='SQL'"/>
+      <ms-debug-tcp-page :scenario="true" :currentProtocol="request.protocol" @saveAs="editApi" v-if="request.protocol==='TCP'"/>
+      <ms-debug-dubbo-page :scenario="true" :currentProtocol="request.protocol" @saveAs="editApi" v-if="request.protocol==='DUBBO'"/>
     </el-card>
   </div>
 </template>
@@ -33,7 +32,6 @@
     name: "ApiCustomize",
     props: {
       node: {},
-      currentProject: {},
       request: {},
     },
     components: {MsDebugHttpPage, MsDebugJdbcPage, MsDebugTcpPage, MsDebugDubboPage},
@@ -56,10 +54,16 @@
       },
       editApi(row) {
         let name = this.request.name;
-        Object.assign(this.request, JSON.parse(row.request));
+        Object.assign(this.request, row.request);
         this.request.name = name;
+        if (this.request.protocol === 'HTTP') {
+          this.request.url = row.url;
+          this.request.method = row.method;
+        }
         this.request.resourceId = getUUID();
-        this.$emit('addCustomizeApi', this.request);
+        let obj = {};
+        Object.assign(obj, this.request);
+        this.$emit('addCustomizeApi', obj);
       },
       reload() {
         this.loading = true
@@ -72,5 +76,12 @@
 </script>
 
 <style scoped>
+  .tip {
+    padding: 3px 5px;
+    font-size: 16px;
+    border-radius: 4px;
+    border-left: 4px solid #783887;
+    margin: 20px 0;
+  }
 
 </style>

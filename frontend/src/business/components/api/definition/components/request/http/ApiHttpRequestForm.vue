@@ -3,7 +3,7 @@
     <el-col :span="21">
       <!-- HTTP 请求参数 -->
       <div style="border:1px #DCDFE6 solid; height: 100%;border-radius: 4px ;width: 100%">
-        <el-tabs v-model="activeName" style="margin: 20px;min-height: 200px">
+        <el-tabs v-model="activeName" class="request-tabs">
           <!-- 请求头-->
           <el-tab-pane :label="$t('api_test.request.headers')" name="headers">
             <el-tooltip class="item-tabs" effect="dark" :content="$t('api_test.request.headers')" placement="top-start" slot="label">
@@ -18,10 +18,10 @@
           </el-tab-pane>
 
           <!--query 参数-->
-          <el-tab-pane :label="$t('api_test.definition.request.query_param')" name="parameters" :disabled="request.arguments.length>1">
+          <el-tab-pane :label="$t('api_test.definition.request.query_param')" name="parameters">
             <el-tooltip class="item-tabs" effect="dark" :content="$t('api_test.definition.request.query_info')" placement="top-start" slot="label">
               <span>{{$t('api_test.definition.request.query_param')}}
-                <div class="el-step__icon is-text ms-api-col ms-query" v-if="request.arguments.length>1">
+                <div class="el-step__icon is-text ms-api-col ms-header" v-if="request.arguments.length>1">
                   <div class="el-step__icon-inner">{{request.arguments.length-1}}</div>
                 </div></span>
             </el-tooltip>
@@ -30,11 +30,11 @@
           </el-tab-pane>
 
           <!--REST 参数-->
-          <el-tab-pane :label="$t('api_test.definition.request.rest_param')" name="rest" >
+          <el-tab-pane :label="$t('api_test.definition.request.rest_param')" name="rest">
             <el-tooltip class="item-tabs" effect="dark" :content="$t('api_test.definition.request.rest_info')" placement="top-start" slot="label">
               <span>
                 {{$t('api_test.definition.request.rest_param')}}
-                <div class="el-step__icon is-text ms-api-col ms-query" v-if="request.rest.length>1">
+                <div class="el-step__icon is-text ms-api-col ms-header" v-if="request.rest.length>1">
                   <div class="el-step__icon-inner">{{request.rest.length-1}}</div>
                 </div>
               </span>
@@ -43,8 +43,8 @@
           </el-tab-pane>
 
           <!--请求体-->
-          <el-tab-pane :label="$t('api_test.request.body')" name="body">
-            <ms-api-body :is-read-only="isReadOnly" :isShowEnable="isShowEnable" :headers="headers" :body="request.body"/>
+          <el-tab-pane v-if="isBodyShow" :label="$t('api_test.request.body')" name="body">
+            <ms-api-body @headersChange="reloadBody" :is-read-only="isReadOnly" :isShowEnable="isShowEnable" :headers="headers" :body="request.body"/>
           </el-tab-pane>
 
           <!-- 认证配置 -->
@@ -61,27 +61,27 @@
 
       <div v-for="row in request.hashTree" :key="row.id" v-loading="isReloadData">
         <!-- 前置脚本 -->
-        <ms-jsr233-processor v-if="row.label ==='JSR223 PreProcessor'" @remove="remove" :is-read-only="false" :title="$t('api_test.definition.request.pre_script')" style-type="color: #B8741A;background-color: #F9F1EA"
+        <ms-jsr233-processor v-if="row.label ==='JSR223 PreProcessor'" @copyRow="copyRow" @remove="remove" :is-read-only="false" :title="$t('api_test.definition.request.pre_script')" style-type="color: #B8741A;background-color: #F9F1EA"
                              :jsr223-processor="row"/>
         <!--后置脚本-->
-        <ms-jsr233-processor v-if="row.label ==='JSR223 PostProcessor'" @remove="remove" :is-read-only="false" :title="$t('api_test.definition.request.post_script')" style-type="color: #783887;background-color: #F2ECF3"
+        <ms-jsr233-processor v-if="row.label ==='JSR223 PostProcessor'" @copyRow="copyRow" @remove="remove" :is-read-only="false" :title="$t('api_test.definition.request.post_script')" style-type="color: #783887;background-color: #F2ECF3"
                              :jsr223-processor="row"/>
         <!--断言规则-->
-        <ms-api-assertions v-if="row.type==='Assertions'" @remove="remove" :is-read-only="isReadOnly" :assertions="row"/>
+        <ms-api-assertions v-if="row.type==='Assertions'" @copyRow="copyRow" @remove="remove" :is-read-only="isReadOnly" :assertions="row"/>
         <!--提取规则-->
-        <ms-api-extract :is-read-only="isReadOnly" @remove="remove" v-if="row.type==='Extract'" :extract="row"/>
+        <ms-api-extract :is-read-only="isReadOnly" @copyRow="copyRow" @remove="remove" v-if="row.type==='Extract'" :extract="row"/>
 
       </div>
     </el-col>
     <!--操作按钮-->
     <el-col :span="3" class="ms-left-cell">
-      <el-button class="ms-left-buttion" size="small" style="color: #B8741A;background-color: #F9F1EA" @click="addPre">+{{$t('api_test.definition.request.pre_script')}}</el-button>
+      <el-button class="ms-left-buttion" size="small" @click="addPre">+{{$t('api_test.definition.request.pre_script')}}</el-button>
       <br/>
-      <el-button class="ms-left-buttion" size="small" style="color: #783887;background-color: #F2ECF3" @click="addPost">+{{$t('api_test.definition.request.post_script')}}</el-button>
+      <el-button class="ms-left-buttion" size="small" @click="addPost">+{{$t('api_test.definition.request.post_script')}}</el-button>
       <br/>
-      <el-button class="ms-left-buttion" size="small" style="color: #A30014;background-color: #F7E6E9" @click="addAssertions">+{{$t('api_test.definition.request.assertions_rule')}}</el-button>
+      <el-button class="ms-left-buttion" size="small" @click="addAssertions">+{{$t('api_test.definition.request.assertions_rule')}}</el-button>
       <br/>
-      <el-button class="ms-left-buttion" size="small" style="color: #015478;background-color: #E6EEF2" @click="addExtract">+{{$t('api_test.definition.request.extract_param')}}</el-button>
+      <el-button class="ms-left-buttion" size="small" @click="addExtract">+{{$t('api_test.definition.request.extract_param')}}</el-button>
     </el-col>
   </el-row>
 </template>
@@ -99,6 +99,7 @@
   import MsApiAssertions from "../../assertion/ApiAssertions";
   import MsApiExtract from "../../extract/ApiExtract";
   import {Assertions, Body, Extract} from "../../../model/ApiTestModel";
+  import {getUUID} from "@/common/js/utils";
 
   export default {
     name: "MsApiHttpRequestForm",
@@ -147,6 +148,7 @@
         },
         headerSuggestions: REQUEST_HEADERS,
         isReloadData: false,
+        isBodyShow: true
       }
     },
 
@@ -180,6 +182,13 @@
         this.request.hashTree.splice(index, 1);
         this.reload();
       },
+      copyRow(row) {
+        let obj = {};
+        Object.assign(obj, row);
+        row.id = getUUID();
+        this.request.hashTree.push(obj);
+        this.reload();
+      },
       reload() {
         this.isReloadData = true
         this.$nextTick(() => {
@@ -199,8 +208,15 @@
         if (!this.request.arguments) {
           this.request.arguments = [];
         }
+      },
+      // 解决修改请求头后 body 显示错位
+      reloadBody() {
+        this.isBodyShow = false;
+        this.$nextTick(() => {
+          this.isBodyShow = true;
+        });
       }
-    },
+    }
   }
 </script>
 
@@ -214,7 +230,7 @@
   }
 
   .ms-query {
-    background: #7F7F7F;
+    background: #783887;
     color: white;
     height: 18px;
     border-radius: 42%;
@@ -225,6 +241,35 @@
     color: white;
     height: 18px;
     border-radius: 42%;
+  }
+
+  .request-tabs {
+    margin: 20px;
+    min-height: 200px;
+  }
+
+  .ms-left-cell .el-button:nth-of-type(1) {
+    color: #B8741A;
+    background-color: #F9F1EA;
+    border: #F9F1EA;
+  }
+
+  .ms-left-cell .el-button:nth-of-type(2) {
+    color: #783887;
+    background-color: #F2ECF3;
+    border: #F2ECF3;
+  }
+
+  .ms-left-cell .el-button:nth-of-type(3) {
+    color: #A30014;
+    background-color: #F7E6E9;
+    border: #F7E6E9;
+  }
+
+  .ms-left-cell .el-button:nth-of-type(4) {
+    color: #015478;
+    background-color: #E6EEF2;
+    border: #E6EEF2;
   }
 
 </style>

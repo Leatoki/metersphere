@@ -2,9 +2,7 @@ package io.metersphere.api.controller;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import io.metersphere.api.dto.automation.ApiScenarioDTO;
-import io.metersphere.api.dto.automation.ApiScenarioRequest;
-import io.metersphere.api.dto.automation.SaveApiScenarioRequest;
+import io.metersphere.api.dto.automation.*;
 import io.metersphere.api.dto.definition.RunDefinitionRequest;
 import io.metersphere.api.service.ApiAutomationService;
 import io.metersphere.base.domain.ApiScenario;
@@ -36,13 +34,13 @@ public class ApiAutomationController {
     }
 
     @PostMapping(value = "/create")
-    public void create(@RequestBody SaveApiScenarioRequest request) {
-        apiAutomationService.create(request);
+    public void create(@RequestPart("request") SaveApiScenarioRequest request, @RequestPart(value = "files") List<MultipartFile> bodyFiles) {
+        apiAutomationService.create(request, bodyFiles);
     }
 
     @PostMapping(value = "/update")
-    public void update(@RequestBody SaveApiScenarioRequest request) {
-        apiAutomationService.update(request);
+    public void update(@RequestPart("request") SaveApiScenarioRequest request, @RequestPart(value = "files") List<MultipartFile> bodyFiles) {
+        apiAutomationService.update(request, bodyFiles);
     }
 
     @GetMapping("/delete/{id}")
@@ -70,9 +68,25 @@ public class ApiAutomationController {
         return apiAutomationService.getApiScenarios(ids);
     }
 
-    @PostMapping(value = "/run")
+    @PostMapping(value = "/run/debug")
     public void runDebug(@RequestPart("request") RunDefinitionRequest request, @RequestPart(value = "files") List<MultipartFile> bodyFiles) {
         apiAutomationService.run(request, bodyFiles);
     }
+
+    @PostMapping(value = "/run")
+    public void run(@RequestBody RunScenarioRequest request) {
+        apiAutomationService.run(request);
+    }
+
+    @PostMapping("/getReference")
+    public ReferenceDTO getReference(@RequestBody ApiScenarioRequest request) {
+        return apiAutomationService.getReference(request);
+    }
+
+    @PostMapping("/scenario/plan")
+    public String addScenarioToPlan(@RequestBody SaveApiPlanRequest request) {
+        return apiAutomationService.addScenarioToPlan(request);
+    }
+
 }
 

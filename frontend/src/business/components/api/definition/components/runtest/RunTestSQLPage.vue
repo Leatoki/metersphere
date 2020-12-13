@@ -18,7 +18,7 @@
 
       <p class="tip">{{$t('api_test.definition.request.req_param')}} </p>
       <!-- TCP 请求参数 -->
-      <ms-basis-parameters :request="api.request" @callback="runTest" :currentProject="currentProject" ref="requestForm"/>
+      <ms-basis-parameters :request="api.request" @callback="runTest" ref="requestForm"/>
 
       <!--返回结果-->
       <!-- HTTP 请求返回数据 -->
@@ -28,11 +28,9 @@
     </el-card>
 
     <!-- 加载用例 -->
-    <el-drawer :visible.sync="visible" direction="btt" :with-header="false" :modal="false" size="50%">
-      <ms-api-case-list @apiCaseClose="apiCaseClose" @selectTestCase="selectTestCase" :api="api" :refreshSign="refreshSign"
-                        :currentProject="currentProject" :loaded="loaded"
-                        ref="caseList"/>
-    </el-drawer>>
+    <ms-api-case-list @apiCaseClose="apiCaseClose" @selectTestCase="selectTestCase" :currentApi="api" :refreshSign="refreshSign"
+                      :loaded="loaded" :createCase="createCase"
+                      ref="caseList"/>
 
     <!-- 环境 -->
     <api-environment-config ref="environmentConfig" @close="environmentConfigClose"/>
@@ -45,7 +43,7 @@
 
 <script>
   import MsApiRequestForm from "../request/http/ApiRequestForm";
-  import {downloadFile, getUUID} from "@/common/js/utils";
+  import {downloadFile, getUUID, getCurrentProjectID} from "@/common/js/utils";
   import MsApiCaseList from "../ApiCaseList";
   import MsContainer from "../../../../common/components/MsContainer";
   import MsBottomContainer from "../BottomContainer";
@@ -54,7 +52,6 @@
   import MsRequestResultTail from "../response/RequestResultTail";
   import MsRun from "../Run";
   import MsBasisParameters from "../request/database/BasisParameters";
-
   import {REQ_METHOD} from "../../model/JsonData";
 
   export default {
@@ -79,6 +76,7 @@
         responseData: {type: 'HTTP', responseResult: {}, subRequestResults: []},
         reqOptions: REQ_METHOD,
         refreshSign: "",
+        createCase: "",
         environments: [],
         rules: {
           method: [{required: true, message: this.$t('test_track.case.input_maintainer'), trigger: 'change'}],
@@ -89,7 +87,7 @@
         reportId: "",
       }
     },
-    props: {apiData: {}, currentProject: {}, currentProtocol: String,},
+    props: {apiData: {}, currentProtocol: String,},
     methods: {
       handleCommand(e) {
         switch (e) {
@@ -123,7 +121,7 @@
       },
       loadCase() {
         this.refreshSign = getUUID();
-        this.loaded = true;
+        this.$refs.caseList.open();
         this.visible = true;
       },
       apiCaseClose() {
@@ -151,9 +149,9 @@
         return bodyUploadFiles;
       },
       saveAsCase() {
-        this.visible = false;
+        this.createCase = getUUID();
+        this.$refs.caseList.open();
         this.loaded = false;
-        this.$refs.caseList.addCase();
       },
       saveAsApi() {
         let data = {};
@@ -180,36 +178,27 @@
         }
       },
       getEnvironments() {
-        if (this.currentProject) {
-          this.$get('/api/environment/list/' + this.currentProject.id, response => {
-            this.environments = response.data;
-            this.environments.forEach(environment => {
-              parseEnvironment(environment);
-            });
-            let hasEnvironment = false;
-            for (let i in this.environments) {
-              if (this.environments[i].id === this.api.environmentId) {
-                this.api.environment = this.environments[i];
-                hasEnvironment = true;
-                break;
-              }
-            }
-            if (!hasEnvironment) {
-              this.api.environmentId = '';
-              this.api.environment = undefined;
-            }
+        this.$get('/api/environment/list/' + getCurrentProjectID(), response => {
+          this.environments = response.data;
+          this.environments.forEach(environment => {
+            parseEnvironment(environment);
           });
-        } else {
-          this.api.environmentId = '';
-          this.api.environment = undefined;
-        }
+          let hasEnvironment = false;
+          for (let i in this.environments) {
+            if (this.environments[i].id === this.api.environmentId) {
+              this.api.environment = this.environments[i];
+              hasEnvironment = true;
+              break;
+            }
+          }
+          if (!hasEnvironment) {
+            this.api.environmentId = '';
+            this.api.environment = undefined;
+          }
+        });
       },
       openEnvironmentConfig() {
-        if (!this.currentProject) {
-          this.$error(this.$t('api_test.select_project'));
-          return;
-        }
-        this.$refs.environmentConfig.open(this.currentProject.id);
+        this.$refs.environmentConfig.open(getCurrentProjectID());
       },
       environmentChange(value) {
         for (let i in this.environments) {
@@ -249,7 +238,8 @@
     border-radius: 4px;
     border-left: 4px solid #783887;
   }
-  /deep/.el-drawer{
+
+  /deep/ .el-drawer {
     overflow: auto;
   }
 </style>

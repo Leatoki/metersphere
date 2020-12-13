@@ -79,6 +79,11 @@ export default {
         roles: ['test_manager', 'test_user', 'test_viewer', 'org_admin', 'admin']
       }
     },
+    {
+      path: 'project/:type',
+      component: () => import('@/business/components/settings/project/MsProject'),
+      meta: {project: true, title: 'project.manager'}
+    },
 
   ]
 }

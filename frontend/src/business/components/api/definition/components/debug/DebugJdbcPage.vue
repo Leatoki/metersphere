@@ -12,7 +12,7 @@
 
       <p class="tip">{{$t('api_test.definition.request.req_param')}} </p>
       <!-- JDBC 请求参数 -->
-      <ms-basis-parameters :request="request" @callback="runDebug" :currentProject="currentProject" ref="requestForm"/>
+      <ms-basis-parameters :request="request" @callback="runDebug" ref="requestForm"/>
 
 
       <!-- JDBC 请求返回数据 -->
@@ -47,8 +47,8 @@
     components: {MsRequestResultTail, MsResponseResult, MsApiRequestForm, MsRequestMetric, MsResponseText, MsRun, MsBasisParameters},
     props: {
       currentProtocol: String,
-      currentProject: {},
       scenario: Boolean,
+      testCase: {},
     },
     data() {
       return {
@@ -69,7 +69,27 @@
       }
     },
     created() {
-      this.request = createComponent("JDBCSampler");
+      if (this.testCase) {
+        // 执行结果信息
+        let url = "/api/definition/report/getReport/" + this.testCase.id;
+        this.$get(url, response => {
+          if (response.data) {
+            let data = JSON.parse(response.data.content);
+            this.responseData = data;
+          }
+        });
+        this.request = this.testCase.request;
+        if (this.request) {
+          this.debugForm.method = this.request.method;
+          if (this.request.url) {
+            this.debugForm.url = this.request.url;
+          } else {
+            this.debugForm.url = this.request.path;
+          }
+        }
+      } else {
+        this.request = createComponent("JDBCSampler");
+      }
     },
     watch: {
       debugResultId() {
@@ -99,7 +119,7 @@
         this.$refs.debugResult.reload();
       },
       saveAs() {
-        let obj = {request: JSON.stringify(this.request)};
+        let obj = {request: this.request};
         this.$emit('saveAs', obj);
       }
     }

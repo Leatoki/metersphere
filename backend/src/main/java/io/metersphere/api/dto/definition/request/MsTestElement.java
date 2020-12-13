@@ -4,11 +4,15 @@ import com.alibaba.fastjson.annotation.JSONField;
 import com.alibaba.fastjson.annotation.JSONType;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.metersphere.api.dto.definition.request.assertions.MsAssertions;
 import io.metersphere.api.dto.definition.request.auth.MsAuthManager;
 import io.metersphere.api.dto.definition.request.configurations.MsHeaderManager;
 import io.metersphere.api.dto.definition.request.controller.MsIfController;
 import io.metersphere.api.dto.definition.request.extract.MsExtract;
+import io.metersphere.api.dto.definition.request.processors.MsJSR223Processor;
 import io.metersphere.api.dto.definition.request.processors.post.MsJSR223PostProcessor;
 import io.metersphere.api.dto.definition.request.processors.pre.MsJSR223PreProcessor;
 import io.metersphere.api.dto.definition.request.sampler.MsDubboSampler;
@@ -16,7 +20,9 @@ import io.metersphere.api.dto.definition.request.sampler.MsHTTPSamplerProxy;
 import io.metersphere.api.dto.definition.request.sampler.MsJDBCSampler;
 import io.metersphere.api.dto.definition.request.sampler.MsTCPSampler;
 import io.metersphere.api.dto.definition.request.timer.MsConstantTimer;
-import io.metersphere.api.dto.scenario.environment.EnvironmentConfig;
+import io.metersphere.api.service.ApiDefinitionService;
+import io.metersphere.base.domain.ApiDefinitionWithBLOBs;
+import io.metersphere.commons.utils.CommonBeanFactory;
 import io.metersphere.commons.utils.LogUtil;
 import lombok.Data;
 import org.apache.jmeter.protocol.http.control.AuthManager;
@@ -32,6 +38,7 @@ import java.util.List;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = MsHTTPSamplerProxy.class, name = "HTTPSamplerProxy"),
         @JsonSubTypes.Type(value = MsHeaderManager.class, name = "HeaderManager"),
+        @JsonSubTypes.Type(value = MsJSR223Processor.class, name = "JSR223Processor"),
         @JsonSubTypes.Type(value = MsJSR223PostProcessor.class, name = "JSR223PostProcessor"),
         @JsonSubTypes.Type(value = MsJSR223PreProcessor.class, name = "JSR223PreProcessor"),
         @JsonSubTypes.Type(value = MsTestPlan.class, name = "TestPlan"),
@@ -47,7 +54,7 @@ import java.util.List;
         @JsonSubTypes.Type(value = MsScenario.class, name = "scenario"),
 
 })
-@JSONType(seeAlso = {MsHTTPSamplerProxy.class, MsHeaderManager.class, MsJSR223PostProcessor.class,
+@JSONType(seeAlso = {MsHTTPSamplerProxy.class, MsHeaderManager.class, MsJSR223Processor.class, MsJSR223PostProcessor.class,
         MsJSR223PreProcessor.class, MsTestPlan.class, MsThreadGroup.class, AuthManager.class, MsAssertions.class,
         MsExtract.class, MsTCPSampler.class, MsDubboSampler.class, MsJDBCSampler.class, MsConstantTimer.class, MsIfController.class, MsScenario.class}, typeKey = "type")
 @Data
@@ -60,10 +67,21 @@ public abstract class MsTestElement {
     @JSONField(ordinal = 3)
     private String label;
     @JSONField(ordinal = 4)
+    private String resourceId;
+    @JSONField(ordinal = 5)
+    private String referenced;
+    @JSONField(ordinal = 6)
+    private boolean active;
+    @JSONField(ordinal = 7)
+    private String index;
+    @JSONField(ordinal = 8)
+    private boolean enable = true;
+
+    @JSONField(ordinal = 9)
     private LinkedList<MsTestElement> hashTree;
 
     // 公共环境逐层传递，如果自身有环境 以自身引用环境为准否则以公共环境作为请求环境
-    public void toHashTree(HashTree tree, List<MsTestElement> hashTree, EnvironmentConfig config) {
+    public void toHashTree(HashTree tree, List<MsTestElement> hashTree, ParameterConfig config) {
         for (MsTestElement el : hashTree) {
             el.toHashTree(tree, el.hashTree, config);
         }
@@ -87,7 +105,7 @@ public abstract class MsTestElement {
         return null;
     }
 
-    public HashTree generateHashTree(EnvironmentConfig config) {
+    public HashTree generateHashTree(ParameterConfig config) {
         HashTree jmeterTestPlanHashTree = new ListedHashTree();
         this.toHashTree(jmeterTestPlanHashTree, this.hashTree, config);
         return jmeterTestPlanHashTree;
@@ -95,10 +113,23 @@ public abstract class MsTestElement {
 
     public HashTree generateHashTree() {
         HashTree jmeterTestPlanHashTree = new ListedHashTree();
-        this.toHashTree(jmeterTestPlanHashTree, this.hashTree, null);
+        this.toHashTree(jmeterTestPlanHashTree, this.hashTree, new ParameterConfig());
         return jmeterTestPlanHashTree;
     }
 
+    public void getRefElement(MsTestElement element) {
+        try {
+            ApiDefinitionService apiDefinitionService = CommonBeanFactory.getBean(ApiDefinitionService.class);
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            ApiDefinitionWithBLOBs apiDefinition = apiDefinitionService.getBLOBs(this.getId());
+            element = mapper.readValue(apiDefinition.getRequest(), new TypeReference<MsTestElement>() {
+            });
+            hashTree.add(element);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 }
 
 

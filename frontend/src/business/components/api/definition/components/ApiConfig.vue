@@ -3,17 +3,16 @@
   <div class="card-container">
     <!-- HTTP 请求参数 -->
     <ms-edit-complete-http-api @runTest="runTest" @saveApi="saveApi" :request="request" :response="response"
-                               :basisData="currentApi" :moduleOptions="moduleOptions" :currentProject="currentProject" v-if="currentProtocol === 'HTTP'"/>
+                               :basisData="currentApi" :moduleOptions="moduleOptions" v-if="currentProtocol === 'HTTP'"/>
     <!-- TCP -->
-    <ms-edit-complete-tcp-api :request="request" @runTest="runTest" @saveApi="saveApi" :currentProject="currentProject" :basisData="currentApi"
+    <ms-edit-complete-tcp-api :request="request" @runTest="runTest" @saveApi="saveApi" :basisData="currentApi"
                               :moduleOptions="moduleOptions" v-if="currentProtocol === 'TCP'"/>
     <!--DUBBO-->
-    <ms-edit-complete-dubbo-api :request="request" @runTest="runTest" @saveApi="saveApi" :currentProject="currentProject" :basisData="currentApi"
+    <ms-edit-complete-dubbo-api :request="request" @runTest="runTest" @saveApi="saveApi" :basisData="currentApi"
                                 :moduleOptions="moduleOptions" v-if="currentProtocol === 'DUBBO'"/>
     <!--SQL-->
-    <ms-edit-complete-sql-api :request="request" @runTest="runTest" @saveApi="saveApi" :currentProject="currentProject" :basisData="currentApi"
+    <ms-edit-complete-sql-api :request="request" @runTest="runTest" @saveApi="saveApi" :basisData="currentApi"
                               :moduleOptions="moduleOptions" v-if="currentProtocol === 'SQL'"/>
-
   </div>
 </template>
 
@@ -24,10 +23,9 @@
   import MsEditCompleteSqlApi from "./complete/EditCompleteSQLApi";
 
   import {ResponseFactory, Body} from "../model/ApiTestModel";
-  import {getUUID} from "@/common/js/utils";
+  import {getUUID, getCurrentProjectID} from "@/common/js/utils";
   import {createComponent, Request} from "./jmeter/components";
   import Sampler from "./jmeter/components/sampler/sampler";
-  import HeaderManager from "./jmeter/components/configurations/header-manager";
   import {WORKSPACE_ID} from '@/common/js/constants';
 
   export default {
@@ -39,16 +37,17 @@
         request: Sampler,
         config: {},
         response: {},
+        projectId: "",
         maintainerOptions: [],
       }
     },
     props: {
       currentApi: {},
       moduleOptions: {},
-      currentProject: {},
       currentProtocol: String,
     },
     created() {
+      this.projectId = getCurrentProjectID();
       this.getMaintainerOptions();
       switch (this.currentProtocol) {
         case Request.TYPES.SQL:
@@ -65,7 +64,11 @@
           break;
       }
       if (this.currentApi.response != null && this.currentApi.response != 'null' && this.currentApi.response != undefined) {
-        this.response = new ResponseFactory(JSON.parse(this.currentApi.response));
+        if (Object.prototype.toString.call(this.currentApi.response).match(/\[object (\w+)\]/)[1].toLowerCase() === 'object') {
+          this.response = this.currentApi.response;
+        } else {
+          this.response = new ResponseFactory(JSON.parse(this.currentApi.response));
+        }
       } else {
         this.response = {headers: [], body: new Body(), statusCode: [], type: "HTTP"};
       }
@@ -91,35 +94,38 @@
           this.maintainerOptions = response.data;
         });
       },
-      initSql() {
+      setRequest() {
         if (this.currentApi.request != undefined && this.currentApi.request != null) {
-          this.request = JSON.parse(this.currentApi.request);
+          if (Object.prototype.toString.call(this.currentApi.request).match(/\[object (\w+)\]/)[1].toLowerCase() === 'object') {
+            this.request = this.currentApi.request;
+          } else {
+            this.request = JSON.parse(this.currentApi.request);
+          }
           this.currentApi.request = this.request;
-        } else {
+          return true;
+        }
+        return false;
+      },
+      initSql() {
+        if (!this.setRequest()) {
           this.request = createComponent("JDBCSampler");
+          this.currentApi.request = this.request;
         }
       },
       initDubbo() {
-        if (this.currentApi.request != undefined && this.currentApi.request != null) {
-          this.request = JSON.parse(this.currentApi.request);
-          this.currentApi.request = this.request;
-        } else {
+        if (!this.setRequest()) {
           this.request = createComponent("DubboSampler");
+          this.currentApi.request = this.request;
         }
       },
       initTcp() {
-        if (this.currentApi.request != undefined && this.currentApi.request != null) {
-          this.request = JSON.parse(this.currentApi.request);
-          this.currentApi.request = this.request;
-        } else {
+        if (!this.setRequest()) {
           this.request = createComponent("TCPSampler");
+          this.currentApi.request = this.request;
         }
       },
       initHttp() {
-        if (this.currentApi.request != undefined && this.currentApi.request != null) {
-          this.request = JSON.parse(this.currentApi.request);
-          this.currentApi.request = this.request;
-        } else {
+        if (!this.setRequest()) {
           this.request = createComponent("HTTPSamplerProxy");
           this.currentApi.request = this.request;
         }
@@ -134,7 +140,7 @@
         });
       },
       setParameters(data) {
-        data.projectId = this.currentProject.id;
+        data.projectId = this.projectId;
         this.request.name = this.currentApi.name;
         data.protocol = this.currentProtocol;
         data.request = this.request;

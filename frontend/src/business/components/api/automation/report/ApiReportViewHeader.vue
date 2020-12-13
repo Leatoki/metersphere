@@ -2,13 +2,17 @@
   <header class="report-header">
     <el-row>
       <el-col>
-        <span>{{ report.projectName === null || report.projectName ==='' ? "场景执行报告": report.projectName}} / </span>
-        <router-link :to="path">{{ report.testName }}</router-link>
+        <span v-if="!debug"><el-input size="mini" style="width: 200px" v-model="report.name"/> </span>
         <span class="time"> {{ report.createTime | timestampFormatDate }}</span>
-        <el-button :disabled="isReadOnly" class="export-button" plain type="primary" size="mini" @click="handleExport(report.name)"
-                   style="margin-left: 1200px">
+
+        <el-button :disabled="isReadOnly" class="export-button" plain type="primary" size="mini" @click="handleExport(report.name)" style="margin-right: 10px">
           {{$t('test_track.plan_view.export_report')}}
         </el-button>
+
+        <el-button v-if="!debug" :disabled="isReadOnly" class="export-button" plain type="primary" size="mini" @click="handleSave(report.name)" style="margin-right: 10px">
+          {{$t('commons.save')}}
+        </el-button>
+
       </el-col>
     </el-row>
   </header>
@@ -19,7 +23,10 @@
 
   export default {
     name: "MsApiReportViewHeader",
-    props: ['report'],
+    props: {
+      report: {},
+      debug: Boolean,
+    },
     computed: {
       path() {
         return "/api/test/edit?id=" + this.report.testId;
@@ -38,6 +45,9 @@
     methods: {
       handleExport(name) {
         this.$emit('reportExport', name);
+      },
+      handleSave(name) {
+        this.$emit('reportSave', name);
       }
     }
   }

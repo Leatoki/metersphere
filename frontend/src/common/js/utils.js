@@ -6,7 +6,8 @@ import {
   ROLE_TEST_MANAGER,
   ROLE_TEST_USER,
   ROLE_TEST_VIEWER,
-  TokenKey
+  TokenKey,
+  PROJECT_ID
 } from "./constants";
 import axios from "axios";
 import {jsPDF} from "jspdf";
@@ -88,9 +89,14 @@ export function getCurrentUser() {
   return JSON.parse(localStorage.getItem(TokenKey));
 }
 
+export function getCurrentProjectID() {
+  return localStorage.getItem(PROJECT_ID);
+}
+
 export function saveLocalStorage(response) {
   // 登录信息保存 cookie
   localStorage.setItem(TokenKey, JSON.stringify(response.data));
+  localStorage.setItem(PROJECT_ID, response.data.lastProjectId);
   let rolesArray = response.data.roles;
   let roles = rolesArray.map(r => r.id);
   // 保存角色

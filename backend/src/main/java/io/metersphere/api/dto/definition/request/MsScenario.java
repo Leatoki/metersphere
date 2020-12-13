@@ -4,6 +4,10 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.alibaba.fastjson.annotation.JSONType;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.metersphere.api.dto.scenario.KeyValue;
 import io.metersphere.api.dto.scenario.environment.EnvironmentConfig;
 import io.metersphere.api.service.ApiAutomationService;
 import io.metersphere.api.service.ApiTestEnvironmentService;
@@ -13,8 +17,12 @@ import io.metersphere.commons.utils.CommonBeanFactory;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.jmeter.save.SaveService;
+import org.apache.jmeter.testelement.TestElement;
 import org.apache.jorphan.collections.HashTree;
+import org.apache.jmeter.config.Arguments;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @Data
@@ -32,29 +40,64 @@ public class MsScenario extends MsTestElement {
     @JSONField(ordinal = 12)
     private String environmentId;
 
-    public void toHashTree(HashTree tree, List<MsTestElement> hashTree, EnvironmentConfig config) {
+    @JSONField(ordinal = 13)
+    private List<KeyValue> variables;
+
+    public void toHashTree(HashTree tree, List<MsTestElement> hashTree, ParameterConfig config) {
+        if (!this.isEnable()) {
+            return;
+        }
         if (environmentId != null) {
             ApiTestEnvironmentService environmentService = CommonBeanFactory.getBean(ApiTestEnvironmentService.class);
             ApiTestEnvironmentWithBLOBs environment = environmentService.get(environmentId);
-            config = JSONObject.parseObject(environment.getConfig(), EnvironmentConfig.class);
+            config.setConfig(JSONObject.parseObject(environment.getConfig(), EnvironmentConfig.class));
+        }
+        if (CollectionUtils.isNotEmpty(this.getVariables())) {
+            config.setVariables(this.variables);
         }
         if (this.getReferenced() != null && this.getReferenced().equals("Deleted")) {
             return;
         } else if (this.getReferenced() != null && this.getReferenced().equals("REF")) {
-            ApiAutomationService apiAutomationService = CommonBeanFactory.getBean(ApiAutomationService.class);
-            ApiScenario scenario = apiAutomationService.getApiScenario(this.getId());
-            JSONObject element = JSON.parseObject(scenario.getScenarioDefinition());
-            List<MsTestElement> dataArr = JSON.parseArray(element.getString("hashTree"), MsTestElement.class);
-            if (hashTree == null) {
-                hashTree = dataArr;
-            } else {
-                hashTree.addAll(dataArr);
+            try {
+                ApiAutomationService apiAutomationService = CommonBeanFactory.getBean(ApiAutomationService.class);
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                ApiScenario scenario = apiAutomationService.getApiScenario(this.getId());
+                JSONObject element = JSON.parseObject(scenario.getScenarioDefinition());
+                LinkedList<MsTestElement> elements = mapper.readValue(element.getString("hashTree"), new TypeReference<LinkedList<MsTestElement>>() {
+                });
+                if (hashTree == null) {
+                    hashTree = elements;
+                } else {
+                    hashTree.addAll(elements);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
+        // 场景变量
+        if (CollectionUtils.isNotEmpty(this.getVariables())) {
+            tree.add(arguments());
+        }
+
         if (CollectionUtils.isNotEmpty(hashTree)) {
             for (MsTestElement el : hashTree) {
                 el.toHashTree(tree, el.getHashTree(), config);
             }
         }
+
     }
+
+    private Arguments arguments() {
+        Arguments arguments = new Arguments();
+        arguments.setEnabled(true);
+        arguments.setName(name + "Variables");
+        arguments.setProperty(TestElement.TEST_CLASS, Arguments.class.getName());
+        arguments.setProperty(TestElement.GUI_CLASS, SaveService.aliasToClass("ArgumentsPanel"));
+        variables.stream().filter(KeyValue::isValid).filter(KeyValue::isEnable).forEach(keyValue ->
+                arguments.addArgument(keyValue.getName(), keyValue.getValue(), "=")
+        );
+        return arguments;
+    }
+
 }

@@ -1,5 +1,7 @@
 export default {
   commons: {
+    cut_back_old_version: 'Cut back to old version',
+    cut_back_new_version: 'Switch back to new version',
     comment: 'comment',
     examples: 'examples',
     help_documentation: 'Help documentation',
@@ -163,7 +165,7 @@ export default {
         current_user: "Current user"
       }
     },
-    monitor:"monitor"
+    monitor: "monitor"
   },
   license: {
     title: 'Authorization management',
@@ -244,7 +246,8 @@ export default {
         '3. When selecting the receiver, it must be the person included in the group you created. The mobile phone number of the receiver is required and it is the mobile phone number used by the nailing enterprise,',
       message: 'Event, receiver and receiving method are required\n' +
         '\n',
-      message_webhook: 'Webhook is required when the receiving mode is nail or enterprise robot'
+      message_webhook: 'Webhook is required when the receiving mode is nail or enterprise robot',
+      template: "Template"
     },
     integration: {
       select_defect_platform: 'Please select the defect management platform to be integrated:',
@@ -294,6 +297,7 @@ export default {
     tapd_id: 'TAPD Project ID',
     jira_key: 'JIRA Project key',
     zentao_id: 'Zentao Project ID',
+    manager: 'Manager',
   },
   member: {
     create: 'Create',
@@ -485,6 +489,7 @@ export default {
       api_case_number: "Number use case",
       api_case_status: "Ise case status",
       api_case_passing_rate: "Use case pass rate",
+      create_tip: "Note: Detailed interface information can be filled out on the edit page",
       request: {
         grade_info: "From high to low",
         run_env: "Operating environment",
@@ -527,22 +532,61 @@ export default {
         post_script: "Postscript",
         extract_param: "Extract parameters",
         add_module: "Add module",
+        edit_api: "Edit Api",
+        test_plan_select: "Please select test plan",
+        create_info: 'Create',
+        update_info: 'Update',
+        batch_edit: "Batch edit",
       }
     },
     automation: {
       follow_people: "Follow people",
       create_tag: "Create tag",
-      scenario_step: "Scenario step",
+      scenario_step: "Ccenario step",
       step_total: "Step total",
-      scenario_total: "Scene public parameters",
-      api_list_import: "Interface list import",
+      scenario_total: "Scenario total",
+      api_list_import: "Api list import",
       external_import: "External import",
-      wait_controller: "Waiting for controller",
-      if_controller: "Condition controller",
-      scenario_import: "Scene import",
-      customize_script: "Custom script",
-      customize_req: "Custom request",
-      reference_info: "Please select interface or use case",
+      wait_controller: "Wait controller",
+      if_controller: "If controller",
+      scenario_import: "Scenario import",
+      customize_script: "Customize script",
+      customize_req: "Customize req",
+      reference_info: "Reference info",
+      scenario_test: "Scenario test",
+      add_scenario: "Add scenario",
+      scenario_name: "Scenario name",
+      case_level: "Case level",
+      tag: "Tag",
+      creator: "Creator",
+      update_time: "Update time",
+      step: "Step",
+      last_result: "Last result",
+      passing_rate: "Passing rate",
+      success: "Success",
+      fail: "Fail",
+      saved: "Saved",
+      trash: "Trash",
+      edit: "Edit",
+      execute: "Execute",
+      copy: "Copy",
+      remove: "Remove",
+      view_ref: "View ref",
+      case_ref: "Case ref",
+      scenario_ref: "Scenario ref",
+      plan_ref: "Plan ref",
+      batch_add_plan: "Add plan",
+      batch_execute: "Batch execute",
+      scenario: {
+        principal: "principal",
+        select_principal: "Select principal",
+        follow_people: "Follow people",
+        select_table: "Select table",
+        select_all: "Select all"
+      },
+      report_name_info: 'Please enter the registration name',
+      save_case_info: 'Please save the use case first',
+      reference_deleted: 'Reference deleted',
     },
     environment: {
       name: "Environment Name",
@@ -779,14 +823,14 @@ export default {
     not_exist: "Test report does not exist",
   },
   api_monitor: {
-    to:"to",
-    start_time:"Start Time",
-    end_time:"End Time",
-    today:"Today",
-    this_week:"This Week",
-    this_mouth:"This Mouth",
-    please_search:"Please Search",
-    date:"Date"
+    to: "to",
+    start_time: "Start Time",
+    end_time: "End Time",
+    today: "Today",
+    this_week: "This Week",
+    this_mouth: "This Mouth",
+    please_search: "Please Search",
+    date: "Date"
   },
   test_track: {
     test_track: "Track",
@@ -1096,6 +1140,7 @@ export default {
     home: 'Home',
     definition: 'Api Definition',
     automation: 'Api Automation',
+    report: 'Test report',
   },
   ldap: {
     url: 'LDAP URL',
