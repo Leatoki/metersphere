@@ -25,8 +25,7 @@
 
       </template>
 
-      <test-case-import :projectId="currentProject == null? null : currentProject.id" @refresh="refresh"
-                        ref="testCaseImport"/>
+      <test-case-import @refreshAll="refreshAll" ref="testCaseImport"/>
 
       <el-table
         border
@@ -63,7 +62,6 @@
             <el-popover
               placement="right-end"
               :title="$t('test_track.case.view_case')"
-              width="60%"
               trigger="hover"
             >
               <test-case-detail v-if="currentCaseId === scope.row.id" :test-case-id="currentCaseId"/>
@@ -176,6 +174,7 @@ import {LIST_CHANGE, TrackEvent} from "@/business/components/common/head/ListEve
 import StatusTableItem from "@/business/components/track/common/tableItems/planview/StatusTableItem";
 import TestCaseDetail from "./TestCaseDetail";
 import ReviewStatus from "@/business/components/track/case/components/ReviewStatus";
+import {getCurrentProjectID} from "../../../../../common/js/utils";
 
 export default {
   name: "TestCaseList",
@@ -264,13 +263,11 @@ export default {
         ],
         maintainer: [],
       },
-      currentCaseId: null
+      currentCaseId: null,
+      projectId: ""
     }
   },
   props: {
-    currentProject: {
-      type: Object
-    },
     selectNodeIds: {
       type: Array
     },
@@ -282,9 +279,6 @@ export default {
     this.initTableData();
   },
   watch: {
-    currentProject() {
-      this.initTableData();
-    },
     selectNodeIds() {
       this.currentPage = 1;
       this.initTableData();
@@ -292,6 +286,7 @@ export default {
   },
   methods: {
     initTableData() {
+      this.projectId = getCurrentProjectID();
       this.condition.planId = "";
       this.condition.nodeIds = [];
       if (this.planId) {
@@ -302,13 +297,11 @@ export default {
         // param.nodeIds = this.selectNodeIds;
         this.condition.nodeIds = this.selectNodeIds;
       }
-      if (this.currentProject.id) {
-        this.getData();
-      }
+      this.getData();
     },
     getData() {
-      if (this.currentProject) {
-        this.condition.projectId = this.currentProject.id;
+      if (this.projectId) {
+        this.condition.projectId = this.projectId;
         this.result = this.$post(this.buildPagePath('/test/case/list'), this.condition, response => {
           let data = response.data;
           this.total = data.itemCount;
@@ -376,10 +369,14 @@ export default {
       });
     },
     refresh() {
-      this.condition = {components: TEST_CASE_CONFIGS};
+      // this.condition = {components: TEST_CASE_CONFIGS};
       // this.selectIds.clear();
       this.selectRows.clear();
       this.$emit('refresh');
+    },
+    refreshAll() {
+      this.selectRows.clear();
+      this.$emit('refreshAll');
     },
     showDetail(row, event, column) {
       this.$emit('testCaseDetail', row);
@@ -416,7 +413,7 @@ export default {
         method: 'post',
         responseType: 'blob',
         // data: {ids: [...this.selectIds]}
-        data: {ids: ids, projectId: this.currentProject.id}
+        data: {ids: ids, projectId: this.projectId}
       };
       this.result = this.$request(config).then(response => {
         const filename = this.$t('test_track.case.test_case') + ".xlsx";

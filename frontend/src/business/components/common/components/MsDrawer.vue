@@ -3,6 +3,7 @@
     <ms-drag-move-bar :direction="dragBarDirection" @widthChange="widthChange" @heightChange="heightChange"/>
     <div class="ms-drawer-header" >
       <slot name="header"></slot>
+      <i class="el-icon-close" @click="close"/>
     </div>
     <div class="ms-drawer-body">
       <slot></slot>
@@ -131,6 +132,9 @@
           if (this.w > document.body.clientWidth) {
             this.w = document.body.clientWidth;
           }
+        },
+        close() {
+          this.$emit('close')
         }
       }
     }
@@ -174,7 +178,21 @@
   }
 
   .ms-drawer-header {
-    position: relative;
+    position: fixed;
+    width: 100%;
+    z-index: 999;
+  }
+
+  .el-icon-close {
+    position: absolute;
+    right: 10px;
+    top: 13px;
+    color: gray;
+    font-size: 20px;
+  }
+
+  .el-icon-close:hover {
+    color: red;
   }
 
 </style>

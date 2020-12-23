@@ -25,9 +25,11 @@
           </template>
 
         </el-table-column>
-        <el-table-column prop="tagName" :label="$t('api_test.automation.tag')" show-overflow-tooltip>
+        <el-table-column prop="tags" :label="$t('api_test.automation.tag')" width="200px">
           <template v-slot:default="scope">
-            <ms-tag type="success" effect="plain" v-if="scope.row.tagName!=undefined" :content="scope.row.tagName"/>
+            <div v-for="(itemName,index)  in scope.row.tags" :key="index">
+              <ms-tag type="success" effect="plain" :content="itemName"/>
+            </div>
           </template>
         </el-table-column>
         <el-table-column prop="userId" :label="$t('api_test.automation.creator')" show-overflow-tooltip/>
@@ -47,7 +49,7 @@
                          show-overflow-tooltip/>
         <el-table-column :label="$t('commons.operating')" width="200px" v-if="!referenced">
           <template v-slot:default="{row}">
-            <div v-if="currentModule!=undefined && currentModule.id === 'gc'">
+            <div v-if="trashEnable">
               <el-button type="text" @click="reductionApi(row)">恢复</el-button>
               <el-button type="text" @click="remove(row)">{{ $t('api_test.automation.remove') }}</el-button>
             </div>
@@ -93,8 +95,12 @@
     name: "MsApiScenarioList",
     components: {MsTablePagination, MsTableMoreBtn, ShowMoreBtn, MsTableHeader, MsTag, MsApiReportDetail, MsScenarioExtendButtons, MsTestPlanList},
     props: {
-      currentModule: Object,
       referenced: {
+        type: Boolean,
+        default: false,
+      },
+      selectNodeIds: Array,
+      trashEnable: {
         type: Boolean,
         default: false,
       }
@@ -131,24 +137,27 @@
       this.search();
     },
     watch: {
-      currentModule() {
+      selectNodeIds() {
         this.search();
+      },
+      trashEnable() {
+        if (this.trashEnable) {
+          this.search();
+        }
       },
     },
     methods: {
       search() {
         this.loading = true;
         this.condition.filters = ["Prepare", "Underway", "Completed"];
-        if (this.currentModule != null) {
-          if (this.currentModule.id === "root") {
-            this.condition.moduleIds = [];
-          } else if (this.currentModule.id === "gc") {
-            this.condition.moduleIds = [];
-            this.condition.filters = ["Trash"];
-          } else {
-            this.condition.moduleIds = this.currentModule.ids;
-          }
+
+        this.condition.moduleIds = this.selectNodeIds;
+
+        if (this.trashEnable) {
+          this.condition.filters = ["Trash"];
+          this.condition.moduleIds = [];
         }
+
         if (this.projectId != null) {
           this.condition.projectId = this.projectId;
         }
@@ -158,6 +167,11 @@
           let data = response.data;
           this.total = data.itemCount;
           this.tableData = data.listObject;
+          this.tableData.forEach(item => {
+            if (item.tags && item.tags.length > 0) {
+              item.tags = JSON.parse(item.tags);
+            }
+          })
           this.loading = false;
         });
       },
@@ -190,6 +204,7 @@
         let scenarioIds = this.selection;
         run.id = getUUID();
         run.scenarioIds = scenarioIds;
+        run.projectId = getCurrentProjectID();
         this.$post(url, run, response => {
           let data = response.data;
           this.runVisible = true;
@@ -210,8 +225,10 @@
         this.$emit('edit', row);
       },
       reductionApi(row) {
-        let obj = {id: row.id, projectId: row.projectId, name: row.name, status: 'Underway'}
-        this.$fileUpload("/api/automation/update", null, [], obj, () => {
+        row.scenarioDefinition = null;
+        row.tags = null;
+        let rows = [row];
+        this.$post("/api/automation/reduction", rows, response => {
           this.$success(this.$t('commons.save_success'));
           this.search();
         })
@@ -223,6 +240,7 @@
         let scenarioIds = [];
         scenarioIds.push(row.id);
         run.id = getUUID();
+        run.projectId = getCurrentProjectID();
         run.scenarioIds = scenarioIds;
         this.$post(url, run, response => {
           let data = response.data;
@@ -231,7 +249,7 @@
         });
       },
       copy(row) {
-        row.id = getUUID();
+        row.copy = true;
         this.$emit('edit', row);
       },
       showReport(row) {
@@ -240,7 +258,7 @@
         this.reportId = row.reportId;
       },
       remove(row) {
-        if (this.currentModule !== undefined && this.currentModule != null && this.currentModule.id === "gc") {
+        if (this.trashEnable) {
           this.$get('/api/automation/delete/' + row.id, () => {
             this.$success(this.$t('commons.delete_success'));
             this.search();
@@ -265,7 +283,7 @@
 </script>
 
 <style scoped>
-  /deep/.el-drawer__header{
+  /deep/ .el-drawer__header {
     margin-bottom: 0px;
   }
 </style>

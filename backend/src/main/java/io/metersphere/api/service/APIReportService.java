@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import io.metersphere.api.dto.APIReportResult;
 import io.metersphere.api.dto.DeleteAPIReportRequest;
 import io.metersphere.api.dto.QueryAPIReportRequest;
+import io.metersphere.api.dto.datacount.ApiDataCountResult;
 import io.metersphere.api.jmeter.TestResult;
 import io.metersphere.base.domain.*;
 import io.metersphere.base.mapper.ApiDataViewMapper;
@@ -15,6 +16,7 @@ import io.metersphere.base.mapper.ext.ExtApiTestReportMapper;
 import io.metersphere.commons.constants.APITestStatus;
 import io.metersphere.commons.constants.ReportTriggerMode;
 import io.metersphere.commons.exception.MSException;
+import io.metersphere.commons.utils.DateUtils;
 import io.metersphere.commons.utils.LogUtil;
 import io.metersphere.commons.utils.ServiceUtils;
 import io.metersphere.commons.utils.SessionUtils;
@@ -25,14 +27,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
@@ -131,7 +131,7 @@ public class APIReportService {
                     String startTime = jsonRequestResults.getJSONObject(j).getString("startTime");
                     String name = jsonRequestResults.getJSONObject(j).getString("name");
                     String url = jsonRequestResults.getJSONObject(j).getString("url");
-                    if (StringUtils.isBlank(url)){
+                    if (StringUtils.isBlank(url)) {
                         //如果非http请求不入库
                         continue;
                     }
@@ -139,7 +139,7 @@ public class APIReportService {
                     apiDataView.setId(UUID.randomUUID().toString());
                     apiDataView.setReportId(reportId);
                     apiDataView.setApiName(name);
-                    apiDataView.setUrl(StringUtils.substringBefore(url,"?"));
+                    apiDataView.setUrl(StringUtils.substringBefore(url, "?"));
                     apiDataView.setResponseTime(responseTime);
                     apiDataView.setStartTime(sdf.format(new Date(Long.parseLong(startTime))));
                     apiDataView.setResponseCode(responseCode);
@@ -149,8 +149,9 @@ public class APIReportService {
         } catch (Exception e) {
             LogUtil.error(e);
         }
-        apiDataViewMapper.insertListApiData(listApiDataView);
-
+        if (listApiDataView.size() > 0) {
+            apiDataViewMapper.insertListApiData(listApiDataView);
+        }
     }
 
     public String create(ApiTest test, String triggerMode) {
@@ -209,5 +210,22 @@ public class APIReportService {
         ApiTestReportExample apiTestReportExample = new ApiTestReportExample();
         apiTestReportExample.createCriteria().andIdIn(reportRequest.getIds());
         apiTestReportMapper.deleteByExample(apiTestReportExample);
+    }
+
+    public long countByProjectIdAndCreateInThisWeek(String projectId) {
+        Map<String, Date> startAndEndDateInWeek = DateUtils.getWeedFirstTimeAndLastTime(new Date());
+
+        Date firstTime = startAndEndDateInWeek.get("firstTime");
+        Date lastTime = startAndEndDateInWeek.get("lastTime");
+
+        if(firstTime==null || lastTime == null){
+            return  0;
+        }else {
+            return extApiTestReportMapper.countByProjectIDAndCreateInThisWeek(projectId,firstTime.getTime(),lastTime.getTime());
+        }
+    }
+
+    public List<ApiDataCountResult> countByProjectIdGroupByExecuteResult(String projectId) {
+        return extApiTestReportMapper.countByProjectIdGroupByExecuteResult(projectId);
     }
 }

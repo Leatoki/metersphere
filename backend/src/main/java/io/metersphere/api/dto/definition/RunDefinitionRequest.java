@@ -15,9 +15,17 @@ public class RunDefinitionRequest {
 
     private String reportId;
 
+    private String name;
+
+    private String type;
+
+    private String projectId;
+
     private String environmentId;
 
     private MsTestElement testElement;
+
+    private String executeType;
 
     private Response response;
 

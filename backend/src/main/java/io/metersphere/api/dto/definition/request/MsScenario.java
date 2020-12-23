@@ -11,16 +11,17 @@ import io.metersphere.api.dto.scenario.KeyValue;
 import io.metersphere.api.dto.scenario.environment.EnvironmentConfig;
 import io.metersphere.api.service.ApiAutomationService;
 import io.metersphere.api.service.ApiTestEnvironmentService;
-import io.metersphere.base.domain.ApiScenario;
+import io.metersphere.base.domain.ApiScenarioWithBLOBs;
 import io.metersphere.base.domain.ApiTestEnvironmentWithBLOBs;
 import io.metersphere.commons.utils.CommonBeanFactory;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.save.SaveService;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jorphan.collections.HashTree;
-import org.apache.jmeter.config.Arguments;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -31,26 +32,32 @@ import java.util.List;
 public class MsScenario extends MsTestElement {
 
     private String type = "scenario";
-    @JSONField(ordinal = 10)
+    @JSONField(ordinal = 20)
     private String name;
 
-    @JSONField(ordinal = 11)
+    @JSONField(ordinal = 21)
     private String referenced;
 
-    @JSONField(ordinal = 12)
+    @JSONField(ordinal = 22)
     private String environmentId;
 
-    @JSONField(ordinal = 13)
+    @JSONField(ordinal = 23)
     private List<KeyValue> variables;
+
+    @JSONField(ordinal = 24)
+    private boolean enableCookieShare;
 
     public void toHashTree(HashTree tree, List<MsTestElement> hashTree, ParameterConfig config) {
         if (!this.isEnable()) {
             return;
         }
-        if (environmentId != null) {
+        config.setEnableCookieShare(enableCookieShare);
+        if (StringUtils.isNotEmpty(environmentId)) {
             ApiTestEnvironmentService environmentService = CommonBeanFactory.getBean(ApiTestEnvironmentService.class);
             ApiTestEnvironmentWithBLOBs environment = environmentService.get(environmentId);
-            config.setConfig(JSONObject.parseObject(environment.getConfig(), EnvironmentConfig.class));
+            if (environment != null && environment.getConfig() != null) {
+                config.setConfig(JSONObject.parseObject(environment.getConfig(), EnvironmentConfig.class));
+            }
         }
         if (CollectionUtils.isNotEmpty(this.getVariables())) {
             config.setVariables(this.variables);
@@ -62,7 +69,7 @@ public class MsScenario extends MsTestElement {
                 ApiAutomationService apiAutomationService = CommonBeanFactory.getBean(ApiAutomationService.class);
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                ApiScenario scenario = apiAutomationService.getApiScenario(this.getId());
+                ApiScenarioWithBLOBs scenario = apiAutomationService.getApiScenario(this.getId());
                 JSONObject element = JSON.parseObject(scenario.getScenarioDefinition());
                 LinkedList<MsTestElement> elements = mapper.readValue(element.getString("hashTree"), new TypeReference<LinkedList<MsTestElement>>() {
                 });

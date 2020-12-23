@@ -1,255 +1,261 @@
 <template>
 
-  <div>
+  <el-dialog :close-on-click-modal="false" class="case-dialog"
+             @close="close"
+             :title="operationType == 'edit' ? ( readOnly ? $t('test_track.case.view_case') : $t('test_track.case.edit_case')) : $t('test_track.case.create')"
+             :visible.sync="dialogFormVisible" width="85%">
 
-    <el-dialog :close-on-click-modal="false"
-               @close="close"
-               :title="operationType == 'edit' ? ( readOnly ? $t('test_track.case.view_case') : $t('test_track.case.edit_case')) : $t('test_track.case.create')"
-               :visible.sync="dialogFormVisible" width="65%">
+    <el-row :gutter="10">
+      <div>
+        <el-col :span="17">
+          <el-card class="container">
+            <el-form :model="form" :rules="rules" ref="caseFrom" v-loading="result.loading" class="case-form">
 
-      <el-form :model="form" :rules="rules" ref="caseFrom" v-loading="result.loading">
+              <el-row>
+                <el-col :span="8" :offset="1">
+                  <el-form-item
+                    :placeholder="$t('test_track.case.input_name')"
+                    :label="$t('test_track.case.name')"
+                    :label-width="formLabelWidth"
+                    prop="name">
+                    <el-input class="case-name" :disabled="readOnly" v-model="form.name"></el-input>
+                  </el-form-item>
+                </el-col>
 
-        <el-row>
-          <el-col :span="8" :offset="1">
-            <el-form-item
-              :placeholder="$t('test_track.case.input_name')"
-              :label="$t('test_track.case.name')"
-              :label-width="formLabelWidth"
-              prop="name">
-              <el-input class="case-name" :disabled="readOnly" v-model="form.name"></el-input>
-            </el-form-item>
-          </el-col>
+                <el-col :span="11" :offset="2">
+                  <el-form-item :label="$t('test_track.case.module')" :label-width="formLabelWidth" prop="module">
+                    <el-select
+                      v-model="form.module"
+                      :disabled="readOnly"
+                      :placeholder="$t('test_track.case.input_module')"
+                      filterable>
+                      <el-option
+                        v-for="item in moduleOptions"
+                        :key="item.id"
+                        :label="item.path"
+                        :value="item.id">
+                      </el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
 
-          <el-col :span="11" :offset="2">
-            <el-form-item :label="$t('test_track.case.module')" :label-width="formLabelWidth" prop="module">
-              <el-select
-                v-model="form.module"
-                :disabled="readOnly"
-                :placeholder="$t('test_track.case.input_module')"
-                filterable>
-                <el-option
-                  v-for="item in moduleOptions"
-                  :key="item.id"
-                  :label="item.path"
-                  :value="item.id">
-                </el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
+              <el-row>
+                <el-col :span="10" :offset="1">
+                  <el-form-item :label="$t('test_track.case.maintainer')" :label-width="formLabelWidth" prop="maintainer">
+                    <el-select :disabled="readOnly" v-model="form.maintainer"
+                               :placeholder="$t('test_track.case.input_maintainer')" filterable>
+                      <el-option
+                        v-for="item in maintainerOptions"
+                        :key="item.id"
+                        :label="item.id + ' (' + item.name + ')'"
+                        :value="item.id">
+                      </el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item :label="$t('test_track.case.priority')" :label-width="formLabelWidth" prop="priority">
+                    <el-select :disabled="readOnly" v-model="form.priority" clearable
+                               :placeholder="$t('test_track.case.input_priority')">
+                      <el-option label="P0" value="P0"></el-option>
+                      <el-option label="P1" value="P1"></el-option>
+                      <el-option label="P2" value="P2"></el-option>
+                      <el-option label="P3" value="P3"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
 
-        <el-row>
-          <el-col :span="10" :offset="1">
-            <el-form-item :label="$t('test_track.case.maintainer')" :label-width="formLabelWidth" prop="maintainer">
-              <el-select :disabled="readOnly" v-model="form.maintainer"
-                         :placeholder="$t('test_track.case.input_maintainer')" filterable>
-                <el-option
-                  v-for="item in maintainerOptions"
-                  :key="item.id"
-                  :label="item.id + ' (' + item.name + ')'"
-                  :value="item.id">
-                </el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item :label="$t('test_track.case.priority')" :label-width="formLabelWidth" prop="priority">
-              <el-select :disabled="readOnly" v-model="form.priority" clearable
-                         :placeholder="$t('test_track.case.input_priority')">
-                <el-option label="P0" value="P0"></el-option>
-                <el-option label="P1" value="P1"></el-option>
-                <el-option label="P2" value="P2"></el-option>
-                <el-option label="P3" value="P3"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
+              <el-row>
+                <el-col :span="10" :offset="1">
+                  <el-form-item :label="$t('test_track.case.type')" :label-width="formLabelWidth" prop="type">
+                    <el-select @change="typeChange" :disabled="readOnly" v-model="form.type"
+                               :placeholder="$t('test_track.case.input_type')">
+                      <el-option :label="$t('commons.functional')" value="functional"></el-option>
+                      <el-option :label="$t('commons.performance')" value="performance"></el-option>
+                      <el-option :label="$t('commons.api')" value="api"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item :label="$t('test_track.case.method')" :label-width="formLabelWidth" prop="method">
+                    <el-select :disabled="readOnly" v-model="form.method" :placeholder="$t('test_track.case.input_method')">
+                      <el-option
+                        v-for="item in methodOptions"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value">
+                      </el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
 
-        <el-row>
-          <el-col :span="10" :offset="1">
-            <el-form-item :label="$t('test_track.case.type')" :label-width="formLabelWidth" prop="type">
-              <el-select @change="typeChange" :disabled="readOnly" v-model="form.type"
-                         :placeholder="$t('test_track.case.input_type')">
-                <el-option :label="$t('commons.functional')" value="functional"></el-option>
-                <el-option :label="$t('commons.performance')" value="performance"></el-option>
-                <el-option :label="$t('commons.api')" value="api"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item :label="$t('test_track.case.method')" :label-width="formLabelWidth" prop="method">
-              <el-select :disabled="readOnly" v-model="form.method" :placeholder="$t('test_track.case.input_method')">
-                <el-option
-                  v-for="item in methodOptions"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value">
-                </el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
+              <el-row v-if="form.method && form.method == 'auto'">
+                <el-col :span="9" :offset="1">
+                  <el-form-item :label="$t('test_track.case.relate_test')" :label-width="formLabelWidth" prop="testId">
+                    <el-select filterable :disabled="readOnly" v-model="form.testId"
+                               :placeholder="$t('test_track.case.input_type')">
+                      <el-option
+                        v-for="item in testOptions"
+                        :key="item.id"
+                        :label="item.name"
+                        :value="item.id">
+                      </el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="9" :offset="1" v-if="form.testId=='other'">
+                  <el-form-item :label="$t('test_track.case.test_name')" :label-width="formLabelWidth" prop="testId">
+                    <el-input v-model="form.otherTestName" :placeholder="$t('test_track.case.input_test_case')"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row style="margin-top: 15px;">
+                <el-col :offset="2">{{ $t('test_track.case.prerequisite') }}:</el-col>
+              </el-row>
+              <el-row type="flex" justify="center" style="margin-top: 10px;">
+                <el-col :span="20">
+                  <el-form-item prop="prerequisite">
+                    <el-input :disabled="readOnly" v-model="form.prerequisite"
+                              type="textarea"
+                              :autosize="{ minRows: 2, maxRows: 4}"
+                              :rows="2"
+                              :placeholder="$t('test_track.case.input_prerequisite')"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
 
-        <el-row v-if="form.method && form.method == 'auto'">
-          <el-col :span="9" :offset="1">
-            <el-form-item :label="$t('test_track.case.relate_test')" :label-width="formLabelWidth" prop="testId">
-              <el-select filterable :disabled="readOnly" v-model="form.testId"
-                         :placeholder="$t('test_track.case.input_type')">
-                <el-option
-                  v-for="item in testOptions"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id">
-                </el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="9" :offset="1" v-if="form.testId=='other'">
-            <el-form-item :label="$t('test_track.case.test_name')" :label-width="formLabelWidth" prop="testId">
-              <el-input v-model="form.otherTestName" :placeholder="$t('test_track.case.input_test_case')"></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row style="margin-top: 15px;">
-          <el-col :offset="2">{{ $t('test_track.case.prerequisite') }}:</el-col>
-        </el-row>
-        <el-row type="flex" justify="center" style="margin-top: 10px;">
-          <el-col :span="20">
-            <el-form-item prop="prerequisite">
-              <el-input :disabled="readOnly" v-model="form.prerequisite"
-                        type="textarea"
-                        :autosize="{ minRows: 2, maxRows: 4}"
-                        :rows="2"
-                        :placeholder="$t('test_track.case.input_prerequisite')"></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
+              <el-row v-if="form.method && form.method != 'auto'" style="margin-bottom: 10px">
+                <el-col :offset="2">{{ $t('test_track.case.steps') }}:</el-col>
+              </el-row>
 
-        <el-row v-if="form.method && form.method != 'auto'" style="margin-bottom: 10px">
-          <el-col :offset="2">{{ $t('test_track.case.steps') }}:</el-col>
-        </el-row>
-
-        <el-row v-if="form.method && form.method != 'auto'" type="flex" justify="center">
-          <el-col :span="20">
-            <el-table
-              v-if="isStepTableAlive"
-              :data="form.steps"
-              class="tb-edit"
-              border
-              size="mini"
-              :default-sort="{prop: 'num', order: 'ascending'}"
-              highlight-current-row>
-              <el-table-column :label="$t('test_track.case.number')" prop="num" min-width="10%"></el-table-column>
-              <el-table-column :label="$t('test_track.case.step_desc')" prop="desc" min-width="35%">
-                <template v-slot:default="scope">
-                  <el-input
-                    class="table-edit-input"
+              <el-row v-if="form.method && form.method != 'auto'" type="flex" justify="center">
+                <el-col :span="20">
+                  <el-table
+                    v-if="isStepTableAlive"
+                    :data="form.steps"
+                    class="tb-edit"
+                    border
                     size="mini"
-                    :disabled="readOnly"
-                    type="textarea"
-                    :autosize="{ minRows: 1, maxRows: 6}"
-                    :rows="2"
-                    v-model="scope.row.desc"
-                    :placeholder="$t('commons.input_content')"
-                    clearable/>
-                </template>
-              </el-table-column>
-              <el-table-column :label="$t('test_track.case.expected_results')" prop="result" min-width="35%">
-                <template v-slot:default="scope">
-                  <el-input
-                    class="table-edit-input"
-                    size="mini"
-                    :disabled="readOnly"
-                    type="textarea"
-                    :autosize="{ minRows: 1, maxRows: 6}"
-                    :rows="2"
-                    v-model="scope.row.result"
-                    :placeholder="$t('commons.input_content')"
-                    clearable/>
-                </template>
-              </el-table-column>
-              <el-table-column :label="$t('commons.input_content')" min-width="20%">
-                <template v-slot:default="scope">
-                  <el-button
-                    type="primary"
-                    :disabled="readOnly"
-                    icon="el-icon-plus"
-                    circle size="mini"
-                    @click="handleAddStep(scope.$index, scope.row)"></el-button>
-                  <el-button
-                    icon="el-icon-document-copy"
-                    type="success"
-                    :disabled="readOnly"
-                    circle size="mini"
-                    @click="handleCopyStep(scope.$index, scope.row)"></el-button>
-                  <el-button
-                    type="danger"
-                    icon="el-icon-delete"
-                    circle size="mini"
-                    @click="handleDeleteStep(scope.$index, scope.row)"
-                    :disabled="readOnly || (scope.$index == 0 && form.steps.length <= 1)"></el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-          </el-col>
-        </el-row>
+                    :default-sort="{prop: 'num', order: 'ascending'}"
+                    highlight-current-row>
+                    <el-table-column :label="$t('test_track.case.number')" prop="num" min-width="10%"></el-table-column>
+                    <el-table-column :label="$t('test_track.case.step_desc')" prop="desc" min-width="35%">
+                      <template v-slot:default="scope">
+                        <el-input
+                          class="table-edit-input"
+                          size="mini"
+                          :disabled="readOnly"
+                          type="textarea"
+                          :autosize="{ minRows: 1, maxRows: 6}"
+                          :rows="2"
+                          v-model="scope.row.desc"
+                          :placeholder="$t('commons.input_content')"
+                          clearable/>
+                      </template>
+                    </el-table-column>
+                    <el-table-column :label="$t('test_track.case.expected_results')" prop="result" min-width="35%">
+                      <template v-slot:default="scope">
+                        <el-input
+                          class="table-edit-input"
+                          size="mini"
+                          :disabled="readOnly"
+                          type="textarea"
+                          :autosize="{ minRows: 1, maxRows: 6}"
+                          :rows="2"
+                          v-model="scope.row.result"
+                          :placeholder="$t('commons.input_content')"
+                          clearable/>
+                      </template>
+                    </el-table-column>
+                    <el-table-column :label="$t('commons.input_content')" min-width="25%">
+                      <template v-slot:default="scope">
+                        <el-button
+                          type="primary"
+                          :disabled="readOnly"
+                          icon="el-icon-plus"
+                          circle size="mini"
+                          @click="handleAddStep(scope.$index, scope.row)"></el-button>
+                        <el-button
+                          icon="el-icon-document-copy"
+                          type="success"
+                          :disabled="readOnly"
+                          circle size="mini"
+                          @click="handleCopyStep(scope.$index, scope.row)"></el-button>
+                        <el-button
+                          type="danger"
+                          icon="el-icon-delete"
+                          circle size="mini"
+                          @click="handleDeleteStep(scope.$index, scope.row)"
+                          :disabled="readOnly || (scope.$index == 0 && form.steps.length <= 1)"></el-button>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                </el-col>
+              </el-row>
 
-        <el-row style="margin-top: 15px;margin-bottom: 10px">
-          <el-col :offset="2">{{ $t('commons.remark') }}:</el-col>
-        </el-row>
-        <el-row type="flex" justify="center">
-          <el-col :span="20">
-            <el-form-item prop="remark">
-              <el-input v-model="form.remark"
-                        :autosize="{ minRows: 2, maxRows: 4}"
-                        type="textarea"
-                        :disabled="readOnly"
-                        :rows="2"
-                        :placeholder="$t('commons.input_content')"></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
+              <el-row style="margin-top: 15px;margin-bottom: 10px">
+                <el-col :offset="2">{{ $t('commons.remark') }}:</el-col>
+              </el-row>
+              <el-row type="flex" justify="center">
+                <el-col :span="20">
+                  <el-form-item prop="remark">
+                    <el-input v-model="form.remark"
+                              :autosize="{ minRows: 2, maxRows: 4}"
+                              type="textarea"
+                              :disabled="readOnly"
+                              :rows="2"
+                              :placeholder="$t('commons.input_content')"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
 
-        <el-row style="margin-top: 15px;margin-bottom: 10px">
-          <el-col :offset="2" :span="20">{{ $t('test_track.case.attachment') }}:
-            <el-upload
-              accept=".jpg,.jpeg,.png,.xlsx,.doc,.pdf,.docx"
-              action=""
-              :show-file-list="false"
-              :before-upload="beforeUpload"
-              :http-request="handleUpload"
-              :on-exceed="handleExceed"
-              multiple
-              :limit="8"
-              :file-list="fileList">
-              <el-button icon="el-icon-plus" size="mini"></el-button>
-              <span slot="tip" class="el-upload__tip"> {{ $t('test_track.case.upload_tip') }} </span>
-            </el-upload>
-          </el-col>
-          <el-col :offset="2" :span="20">
-            <test-case-attachment :table-data="tableData"
-                                  :read-only="readOnly"
-                                  :is-delete="true"
-                                  @handleDelete="handleDelete"
-            />
-          </el-col>
-        </el-row>
+              <el-row style="margin-top: 15px;margin-bottom: 10px">
+                <el-col :offset="2" :span="20">{{ $t('test_track.case.attachment') }}:
+                  <el-upload
+                    accept=".jpg,.jpeg,.png,.xlsx,.doc,.pdf,.docx"
+                    action=""
+                    :show-file-list="false"
+                    :before-upload="beforeUpload"
+                    :http-request="handleUpload"
+                    :on-exceed="handleExceed"
+                    multiple
+                    :limit="8"
+                    :file-list="fileList">
+                    <el-button icon="el-icon-plus" size="mini"></el-button>
+                    <span slot="tip" class="el-upload__tip"> {{ $t('test_track.case.upload_tip') }} </span>
+                  </el-upload>
+                </el-col>
+                <el-col :offset="2" :span="20">
+                  <test-case-attachment :table-data="tableData"
+                                        :read-only="readOnly"
+                                        :is-delete="true"
+                                        @handleDelete="handleDelete"
+                  />
+                </el-col>
+              </el-row>
 
-      </el-form>
+            </el-form>
+            <el-row style="float: right; margin-bottom: 20px;margin-top: 20px">
+              <el-switch v-if="operationType == 'add'"
+                         v-model="isCreateContinue"
+                         :active-text="$t('test_track.case.save_create_continue')">
+              </el-switch>
+              <ms-dialog-footer v-if="!readOnly"
+                                @cancel="dialogFormVisible = false"
+                                @confirm="saveCase"/>
+            </el-row>
+          </el-card>
+        </el-col>
+        <el-col :span="7">
+          <case-comment :case-id="testCase ? testCase.id : ''" class="comment-card"/>
+        </el-col>
+      </div>
+    </el-row>
 
-      <template v-slot:footer>
-        <el-switch v-if="operationType == 'add'"
-                   v-model="isCreateContinue"
-                   :active-text="$t('test_track.case.save_create_continue')">
-        </el-switch>
-        <ms-dialog-footer v-if="!readOnly"
-                          @cancel="dialogFormVisible = false"
-                          @confirm="saveCase"/>
-      </template>
-
-    </el-dialog>
-
-  </div>
+  </el-dialog>
 
 
 </template>
@@ -262,13 +268,17 @@ import {listenGoBack, removeGoBackListener} from "@/common/js/utils";
 import {LIST_CHANGE, TrackEvent} from "@/business/components/common/head/ListEvent";
 import {Message} from "element-ui";
 import TestCaseAttachment from "@/business/components/track/case/components/TestCaseAttachment";
+import {getCurrentProjectID} from "../../../../../common/js/utils";
+import {buildNodePath} from "../../../api/definition/model/NodeTree";
+import CaseComment from "@/business/components/track/case/components/CaseComment";
 
 export default {
   name: "TestCaseEdit",
-  components: {MsDialogFooter, TestCaseAttachment},
+  components: {CaseComment, MsDialogFooter, TestCaseAttachment},
   data() {
     return {
       result: {},
+      projectId: "",
       dialogFormVisible: false,
       form: {
         name: '',
@@ -315,7 +325,8 @@ export default {
       methodOptions: [
         {value: 'auto', label: this.$t('test_track.case.auto')},
         {value: 'manual', label: this.$t('test_track.case.manual')}
-      ]
+      ],
+      testCase: {}
     };
   },
   props: {
@@ -329,9 +340,6 @@ export default {
     selectNode: {
       type: Object
     },
-    currentProject: {
-      type: Object
-    }
   },
   mounted() {
     this.getSelectOptions();
@@ -340,9 +348,6 @@ export default {
     treeNodes() {
       this.getModuleOptions();
     },
-    currentProject() {
-      this.getTestOptions();
-    }
   },
   methods: {
     reload() {
@@ -350,8 +355,13 @@ export default {
       this.$nextTick(() => (this.isStepTableAlive = true));
     },
     open(testCase) {
+      this.testCase = {};
+      if (testCase) {
+        // 复制 不查询评论
+        this.testCase = testCase.isCopy ? {} : testCase;
+      }
       this.resetForm();
-
+      this.projectId = getCurrentProjectID();
       if (window.history && window.history.pushState) {
         history.pushState(null, null, document.URL);
         window.addEventListener('popstate', this.close);
@@ -489,8 +499,8 @@ export default {
           param.nodePath = item.path;
         }
       });
-      if (this.currentProject.id) {
-        param.projectId = this.currentProject.id;
+      if (this.projectId) {
+        param.projectId = this.projectId;
       }
       param.name = param.name.trim();
       if (param.method != 'auto') {
@@ -551,7 +561,7 @@ export default {
     getModuleOptions() {
       let moduleOptions = [];
       this.treeNodes.forEach(node => {
-        this.buildNodePath(node, {path: ''}, moduleOptions);
+        buildNodePath(node, {path: ''}, moduleOptions);
       });
       this.moduleOptions = moduleOptions;
     },
@@ -563,8 +573,8 @@ export default {
     },
     getTestOptions() {
       this.testOptions = [];
-      if (this.currentProject.id && this.form.type != '' && this.form.type != 'functional') {
-        this.result = this.$get('/' + this.form.type + '/list/' + this.currentProject.id, response => {
+      if (this.projectId && this.form.type != '' && this.form.type != 'functional') {
+        this.result = this.$get('/' + this.form.type + '/list/' + this.projectId, response => {
           this.testOptions = response.data;
           this.testOptions.unshift({id: 'other', name: this.$t('test_track.case.other')})
         });
@@ -578,17 +588,7 @@ export default {
       this.getMaintainerOptions();
       this.getTestOptions();
     },
-    buildNodePath(node, option, moduleOptions) {
-      //递归构建节点路径
-      option.id = node.id;
-      option.path = option.path + '/' + node.name;
-      moduleOptions.push(option);
-      if (node.children) {
-        for (let i = 0; i < node.children.length; i++) {
-          this.buildNodePath(node.children[i], {path: option.path}, moduleOptions);
-        }
-      }
-    },
+
     resetForm() {
       //防止点击修改后，点击新建触发校验
       if (this.$refs['caseFrom']) {
@@ -710,4 +710,28 @@ export default {
   width: 194px;
 }
 
+.container {
+  height: 100vh;
+}
+
+.case-form {
+  height: 95%;
+  overflow: auto;
+}
+
+.case-dialog >>> .el-dialog__body {
+  padding: 0 20px 10px 20px;
+}
+
+.container >>> .el-card__body {
+  height: calc(100vh - 120px);
+}
+
+.comment-card >>> .el-card__header {
+  padding: 27px 20px;
+}
+
+.comment-card >>> .el-card__body {
+  height: calc(100vh - 120px);
+}
 </style>

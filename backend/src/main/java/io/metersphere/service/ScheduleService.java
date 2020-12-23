@@ -1,6 +1,7 @@
 package io.metersphere.service;
 
 import com.alibaba.fastjson.JSON;
+import io.metersphere.api.dto.datacount.response.TaskInfoResult;
 import io.metersphere.base.domain.Schedule;
 import io.metersphere.base.domain.ScheduleExample;
 import io.metersphere.base.domain.User;
@@ -9,6 +10,7 @@ import io.metersphere.base.mapper.ScheduleMapper;
 import io.metersphere.base.mapper.UserMapper;
 import io.metersphere.base.mapper.ext.ExtScheduleMapper;
 import io.metersphere.commons.exception.MSException;
+import io.metersphere.commons.utils.DateUtils;
 import io.metersphere.commons.utils.LogUtil;
 import io.metersphere.commons.utils.ServiceUtils;
 import io.metersphere.commons.utils.SessionUtils;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -61,6 +64,7 @@ public class ScheduleService {
     }
 
     public Schedule getScheduleByResource(String resourceId, String group) {
+
         ScheduleExample example = new ScheduleExample();
         example.createCriteria().andResourceIdEqualTo(resourceId).andGroupEqualTo(group);
         List<Schedule> schedules = scheduleMapper.selectByExample(example);
@@ -161,5 +165,27 @@ public class ScheduleService {
             schedule.setResourceName(resourceNameMap.get(schedule.getResourceId()));
             schedule.setUserName(userMap.get(schedule.getUserId()));
         });
+    }
+
+    public long countTaskByProjectId(String projectId) {
+        return  extScheduleMapper.countTaskByProjectId(projectId);
+    }
+
+    public long countTaskByProjectIdInThisWeek(String projectId) {
+        Map<String, Date> startAndEndDateInWeek = DateUtils.getWeedFirstTimeAndLastTime(new Date());
+
+        Date firstTime = startAndEndDateInWeek.get("firstTime");
+        Date lastTime = startAndEndDateInWeek.get("lastTime");
+
+        if(firstTime==null || lastTime == null){
+            return  0;
+        }else {
+            return extScheduleMapper.countTaskByProjectIdAndCreateTimeRange(projectId,firstTime.getTime(),lastTime.getTime());
+        }
+    }
+
+    public List<TaskInfoResult> findRunningTaskInfoByProjectID(String projectID) {
+        List<TaskInfoResult> runningTaskInfoList = extScheduleMapper.findRunningTaskInfoByProjectID(projectID);
+        return  runningTaskInfoList;
     }
 }

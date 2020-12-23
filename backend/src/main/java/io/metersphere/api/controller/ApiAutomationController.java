@@ -6,10 +6,13 @@ import io.metersphere.api.dto.automation.*;
 import io.metersphere.api.dto.definition.RunDefinitionRequest;
 import io.metersphere.api.service.ApiAutomationService;
 import io.metersphere.base.domain.ApiScenario;
+import io.metersphere.base.domain.ApiScenarioWithBLOBs;
+import io.metersphere.base.domain.Schedule;
 import io.metersphere.commons.constants.RoleConstants;
 import io.metersphere.commons.utils.PageUtils;
 import io.metersphere.commons.utils.Pager;
 import io.metersphere.commons.utils.SessionUtils;
+import io.metersphere.track.request.testcase.ApiCaseRelevanceRequest;
 import org.apache.shiro.authz.annotation.Logical;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +29,9 @@ public class ApiAutomationController {
     @Resource
     ApiAutomationService apiAutomationService;
 
+
     @PostMapping("/list/{goPage}/{pageSize}")
+    @RequiresRoles(value = {RoleConstants.TEST_MANAGER, RoleConstants.TEST_USER, RoleConstants.TEST_VIEWER}, logical = Logical.OR)
     public Pager<List<ApiScenarioDTO>> list(@PathVariable int goPage, @PathVariable int pageSize, @RequestBody ApiScenarioRequest request) {
         Page<Object> page = PageHelper.startPage(goPage, pageSize, true);
         request.setWorkspaceId(SessionUtils.getCurrentWorkspaceId());
@@ -34,8 +39,8 @@ public class ApiAutomationController {
     }
 
     @PostMapping(value = "/create")
-    public void create(@RequestPart("request") SaveApiScenarioRequest request, @RequestPart(value = "files") List<MultipartFile> bodyFiles) {
-        apiAutomationService.create(request, bodyFiles);
+    public ApiScenario create(@RequestPart("request") SaveApiScenarioRequest request, @RequestPart(value = "files") List<MultipartFile> bodyFiles) {
+        return apiAutomationService.create(request, bodyFiles);
     }
 
     @PostMapping(value = "/update")
@@ -58,23 +63,30 @@ public class ApiAutomationController {
         apiAutomationService.removeToGc(ids);
     }
 
+    @PostMapping("/reduction")
+    public void reduction(@RequestBody List<SaveApiScenarioRequest> requests) {
+        apiAutomationService.reduction(requests);
+    }
+
     @GetMapping("/getApiScenario/{id}")
     public ApiScenario getScenarioDefinition(@PathVariable String id) {
         return apiAutomationService.getApiScenario(id);
     }
 
     @PostMapping("/getApiScenarios")
-    public List<ApiScenario> getApiScenarios(@RequestBody List<String> ids) {
+    public List<ApiScenarioWithBLOBs> getApiScenarios(@RequestBody List<String> ids) {
         return apiAutomationService.getApiScenarios(ids);
     }
 
     @PostMapping(value = "/run/debug")
     public void runDebug(@RequestPart("request") RunDefinitionRequest request, @RequestPart(value = "files") List<MultipartFile> bodyFiles) {
+        request.setExecuteType(ExecuteType.Debug.name());
         apiAutomationService.run(request, bodyFiles);
     }
 
     @PostMapping(value = "/run")
     public void run(@RequestBody RunScenarioRequest request) {
+        request.setExecuteType(ExecuteType.Completed.name());
         apiAutomationService.run(request);
     }
 
@@ -88,5 +100,19 @@ public class ApiAutomationController {
         return apiAutomationService.addScenarioToPlan(request);
     }
 
+    @PostMapping("/relevance")
+    public void testPlanRelevance(@RequestBody ApiCaseRelevanceRequest request) {
+        apiAutomationService.relevance(request);
+    }
+
+    @PostMapping(value = "/schedule/update")
+    public void updateSchedule(@RequestBody Schedule request) {
+        apiAutomationService.updateSchedule(request);
+    }
+
+    @PostMapping(value = "/schedule/create")
+    public void createSchedule(@RequestBody Schedule request) {
+        apiAutomationService.createSchedule(request);
+    }
 }
 

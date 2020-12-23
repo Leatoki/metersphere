@@ -1,5 +1,6 @@
 package io.metersphere.base.mapper.ext;
 
+import io.metersphere.api.dto.datacount.ApiDataCountResult;
 import io.metersphere.api.dto.definition.ApiComputeResult;
 import io.metersphere.api.dto.definition.ApiDefinitionRequest;
 import io.metersphere.api.dto.definition.ApiDefinitionResult;
@@ -15,4 +16,13 @@ public interface ExtApiDefinitionMapper {
 
     int removeToGc(@Param("ids") List<String> ids);
 
+    int reduction(@Param("ids") List<String> ids);
+
+    List<ApiDataCountResult> countProtocolByProjectID(String projectId);
+
+    Long countByProjectIDAndCreateInThisWeek(@Param("projectId") String projectId, @Param("firstDayTimestamp") long firstDayTimestamp, @Param("lastDayTimestamp") long lastDayTimestamp);
+
+    List<ApiDataCountResult> countStateByProjectID(String projectId);
+
+    List<ApiDataCountResult> countApiCoverageByProjectID(String projectId);
 }

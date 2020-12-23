@@ -18,6 +18,7 @@ public class ApiScenarioRequest {
     private String name;
     private String workspaceId;
     private String userId;
+    private String planId;
     private boolean recent = false;
     private List<OrderRequest> orders;
     private List<String> filters;

@@ -1,89 +1,102 @@
 <template xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
-  <el-row>
-    <el-col :span="21">
-      <!-- HTTP 请求参数 -->
-      <div style="border:1px #DCDFE6 solid; height: 100%;border-radius: 4px ;width: 100%">
-        <el-tabs v-model="activeName" class="request-tabs">
-          <!-- 请求头-->
-          <el-tab-pane :label="$t('api_test.request.headers')" name="headers">
-            <el-tooltip class="item-tabs" effect="dark" :content="$t('api_test.request.headers')" placement="top-start" slot="label">
+  <div>
+    <el-row>
+      <el-col :span="21">
+        <!-- HTTP 请求参数 -->
+        <div style="border:1px #DCDFE6 solid; height: 100%;border-radius: 4px ;width: 100%" v-loading="isReloadData">
+          <el-tabs v-model="activeName" class="request-tabs">
+            <!-- 请求头-->
+            <el-tab-pane :label="$t('api_test.request.headers')" name="headers">
+              <el-tooltip class="item-tabs" effect="dark" :content="$t('api_test.request.headers')" placement="top-start" slot="label">
               <span>{{$t('api_test.request.headers')}}
                 <div class="el-step__icon is-text ms-api-col ms-header" v-if="headers.length>1">
                   <div class="el-step__icon-inner">{{headers.length-1}}</div>
                 </div>
               </span>
-            </el-tooltip>
+              </el-tooltip>
+              <ms-api-key-value :is-read-only="isReadOnly" :isShowEnable="isShowEnable" :suggestions="headerSuggestions" :items="headers"/>
+            </el-tab-pane>
 
-            <ms-api-key-value :is-read-only="isReadOnly" :isShowEnable="isShowEnable" :suggestions="headerSuggestions" :items="headers"/>
-          </el-tab-pane>
-
-          <!--query 参数-->
-          <el-tab-pane :label="$t('api_test.definition.request.query_param')" name="parameters">
-            <el-tooltip class="item-tabs" effect="dark" :content="$t('api_test.definition.request.query_info')" placement="top-start" slot="label">
+            <!--query 参数-->
+            <el-tab-pane :label="$t('api_test.definition.request.query_param')" name="parameters">
+              <el-tooltip class="item-tabs" effect="dark" :content="$t('api_test.definition.request.query_info')" placement="top-start" slot="label">
               <span>{{$t('api_test.definition.request.query_param')}}
                 <div class="el-step__icon is-text ms-api-col ms-header" v-if="request.arguments.length>1">
                   <div class="el-step__icon-inner">{{request.arguments.length-1}}</div>
                 </div></span>
-            </el-tooltip>
+              </el-tooltip>
+              <el-row>
+                <el-link class="ms-el-link" @click="batchAdd"> {{$t("commons.batch_add")}}</el-link>
+              </el-row>
+              <ms-api-variable :is-read-only="isReadOnly" :isShowEnable="isShowEnable" :parameters="request.arguments"/>
+            </el-tab-pane>
 
-            <ms-api-variable :is-read-only="isReadOnly" :isShowEnable="isShowEnable" :parameters="request.arguments"/>
-          </el-tab-pane>
-
-          <!--REST 参数-->
-          <el-tab-pane :label="$t('api_test.definition.request.rest_param')" name="rest">
-            <el-tooltip class="item-tabs" effect="dark" :content="$t('api_test.definition.request.rest_info')" placement="top-start" slot="label">
+            <!--REST 参数-->
+            <el-tab-pane :label="$t('api_test.definition.request.rest_param')" name="rest">
+              <el-tooltip class="item-tabs" effect="dark" :content="$t('api_test.definition.request.rest_info')" placement="top-start" slot="label">
               <span>
                 {{$t('api_test.definition.request.rest_param')}}
                 <div class="el-step__icon is-text ms-api-col ms-header" v-if="request.rest.length>1">
                   <div class="el-step__icon-inner">{{request.rest.length-1}}</div>
                 </div>
               </span>
-            </el-tooltip>
-            <ms-api-variable :is-read-only="isReadOnly" :isShowEnable="isShowEnable" :parameters="request.rest"/>
-          </el-tab-pane>
+              </el-tooltip>
+              <el-row>
+                <el-link class="ms-el-link" @click="batchAdd"> {{$t("commons.batch_add")}}</el-link>
+              </el-row>
+              <ms-api-variable :is-read-only="isReadOnly" :isShowEnable="isShowEnable" :parameters="request.rest"/>
+            </el-tab-pane>
 
-          <!--请求体-->
-          <el-tab-pane v-if="isBodyShow" :label="$t('api_test.request.body')" name="body">
-            <ms-api-body @headersChange="reloadBody" :is-read-only="isReadOnly" :isShowEnable="isShowEnable" :headers="headers" :body="request.body"/>
-          </el-tab-pane>
+            <!--请求体-->
+            <el-tab-pane v-if="isBodyShow" :label="$t('api_test.request.body')" name="body" style="overflow: auto">
+              <ms-api-body @headersChange="reloadBody" :is-read-only="isReadOnly" :isShowEnable="isShowEnable" :headers="headers" :body="request.body"/>
+            </el-tab-pane>
 
-          <!-- 认证配置 -->
-          <el-tab-pane :label="$t('api_test.definition.request.auth_config')" name="authConfig">
-            <el-tooltip class="item-tabs" effect="dark" :content="$t('api_test.definition.request.auth_config_info')" placement="top-start" slot="label">
-              <span>{{$t('api_test.definition.request.auth_config')}}</span>
-            </el-tooltip>
+            <!-- 认证配置 -->
+            <el-tab-pane :label="$t('api_test.definition.request.auth_config')" name="authConfig">
+              <el-tooltip class="item-tabs" effect="dark" :content="$t('api_test.definition.request.auth_config_info')" placement="top-start" slot="label">
+                <span>{{$t('api_test.definition.request.auth_config')}}</span>
+              </el-tooltip>
 
-            <ms-api-auth-config :is-read-only="isReadOnly" :request="request"/>
-          </el-tab-pane>
+              <ms-api-auth-config :is-read-only="isReadOnly" :request="request"/>
+            </el-tab-pane>
 
-        </el-tabs>
-      </div>
+            <el-tab-pane label="其他设置" name="advancedConfig">
+              <ms-api-advanced-config :is-read-only="isReadOnly" :request="request"/>
+            </el-tab-pane>
 
-      <div v-for="row in request.hashTree" :key="row.id" v-loading="isReloadData">
-        <!-- 前置脚本 -->
-        <ms-jsr233-processor v-if="row.label ==='JSR223 PreProcessor'" @copyRow="copyRow" @remove="remove" :is-read-only="false" :title="$t('api_test.definition.request.pre_script')" style-type="color: #B8741A;background-color: #F9F1EA"
-                             :jsr223-processor="row"/>
-        <!--后置脚本-->
-        <ms-jsr233-processor v-if="row.label ==='JSR223 PostProcessor'" @copyRow="copyRow" @remove="remove" :is-read-only="false" :title="$t('api_test.definition.request.post_script')" style-type="color: #783887;background-color: #F2ECF3"
-                             :jsr223-processor="row"/>
-        <!--断言规则-->
-        <ms-api-assertions v-if="row.type==='Assertions'" @copyRow="copyRow" @remove="remove" :is-read-only="isReadOnly" :assertions="row"/>
-        <!--提取规则-->
-        <ms-api-extract :is-read-only="isReadOnly" @copyRow="copyRow" @remove="remove" v-if="row.type==='Extract'" :extract="row"/>
+          </el-tabs>
+        </div>
+        <div v-if="!referenced">
+          <div v-for="row in request.hashTree" :key="row.id">
+            <!-- 前置脚本 -->
+            <ms-jsr233-processor v-if="row.label ==='JSR223 PreProcessor'" @copyRow="copyRow" @remove="remove" :is-read-only="false" :title="$t('api_test.definition.request.pre_script')" style-type="color: #B8741A;background-color: #F9F1EA"
+                                 :jsr223-processor="row"/>
+            <!--后置脚本-->
+            <ms-jsr233-processor v-if="row.label ==='JSR223 PostProcessor'" @copyRow="copyRow" @remove="remove" :is-read-only="false" :title="$t('api_test.definition.request.post_script')" style-type="color: #783887;background-color: #F2ECF3"
+                                 :jsr223-processor="row"/>
+            <!--断言规则-->
+            <ms-api-assertions v-if="row.type==='Assertions'" @copyRow="copyRow" @remove="remove" :is-read-only="isReadOnly" :assertions="row"/>
+            <!--提取规则-->
+            <ms-api-extract :is-read-only="isReadOnly" @copyRow="copyRow" @remove="remove" v-if="row.type==='Extract'" :extract="row"/>
+          </div>
 
-      </div>
-    </el-col>
-    <!--操作按钮-->
-    <el-col :span="3" class="ms-left-cell">
-      <el-button class="ms-left-buttion" size="small" @click="addPre">+{{$t('api_test.definition.request.pre_script')}}</el-button>
-      <br/>
-      <el-button class="ms-left-buttion" size="small" @click="addPost">+{{$t('api_test.definition.request.post_script')}}</el-button>
-      <br/>
-      <el-button class="ms-left-buttion" size="small" @click="addAssertions">+{{$t('api_test.definition.request.assertions_rule')}}</el-button>
-      <br/>
-      <el-button class="ms-left-buttion" size="small" @click="addExtract">+{{$t('api_test.definition.request.extract_param')}}</el-button>
-    </el-col>
-  </el-row>
+
+        </div>
+      </el-col>
+      <!--操作按钮-->
+      <el-col :span="3" class="ms-left-cell" v-if="!referenced && showScript">
+        <el-button class="ms-left-buttion" size="small" @click="addPre">+{{$t('api_test.definition.request.pre_script')}}</el-button>
+        <br/>
+        <el-button class="ms-left-buttion" size="small" @click="addPost">+{{$t('api_test.definition.request.post_script')}}</el-button>
+        <br/>
+        <el-button class="ms-left-buttion" size="small" @click="addAssertions">+{{$t('api_test.definition.request.assertions_rule')}}</el-button>
+        <br/>
+        <el-button class="ms-left-buttion" size="small" @click="addExtract">+{{$t('api_test.definition.request.extract_param')}}</el-button>
+      </el-col>
+    </el-row>
+    <batch-add-parameter @batchSave="batchSave" ref="batchAddParameter"/>
+  </div>
 </template>
 
 <script>
@@ -94,28 +107,38 @@
   import {REQUEST_HEADERS} from "@/common/js/constants";
   import MsApiVariable from "../../ApiVariable";
   import MsJsr233Processor from "../../processor/Jsr233Processor";
-  import MsApiAdvancedConfig from "../../ApiAdvancedConfig";
   import {createComponent} from "../../jmeter/components";
   import MsApiAssertions from "../../assertion/ApiAssertions";
   import MsApiExtract from "../../extract/ApiExtract";
-  import {Assertions, Body, Extract} from "../../../model/ApiTestModel";
+  import {Assertions, Body, Extract, KeyValue} from "../../../model/ApiTestModel";
   import {getUUID} from "@/common/js/utils";
+  import BatchAddParameter from "../../basis/BatchAddParameter";
+  import MsApiAdvancedConfig from "./ApiAdvancedConfig";
 
   export default {
     name: "MsApiHttpRequestForm",
     components: {
       MsJsr233Processor,
       MsApiAdvancedConfig,
-      MsApiVariable, ApiRequestMethodSelect, MsApiExtract, MsApiAuthConfig, MsApiBody, MsApiKeyValue, MsApiAssertions
+      BatchAddParameter,
+      MsApiVariable,
+      ApiRequestMethodSelect,
+      MsApiExtract,
+      MsApiAuthConfig,
+      MsApiBody,
+      MsApiKeyValue,
+      MsApiAssertions
     },
     props: {
       request: {},
+      showScript: Boolean,
       headers: {
         type: Array,
         default() {
           return [];
         }
       },
+      referenced: Boolean,
       isShowEnable: Boolean,
       jsonPathList: Array,
       isReadOnly: {
@@ -148,7 +171,8 @@
         },
         headerSuggestions: REQUEST_HEADERS,
         isReloadData: false,
-        isBodyShow: true
+        isBodyShow: true,
+        dialogVisible: false,
       }
     },
 
@@ -183,9 +207,8 @@
         this.reload();
       },
       copyRow(row) {
-        let obj = {};
-        Object.assign(obj, row);
-        row.id = getUUID();
+        let obj = JSON.parse(JSON.stringify(row));
+        obj.id = getUUID();
         this.request.hashTree.push(obj);
         this.reload();
       },
@@ -215,6 +238,35 @@
         this.$nextTick(() => {
           this.isBodyShow = true;
         });
+      },
+      batchAdd() {
+        this.$refs.batchAddParameter.open();
+      },
+      batchSave(data) {
+        if (data) {
+          let params = data.split("\n");
+          let keyValues = [];
+          params.forEach(item => {
+            let line = item.split(/，|,/);
+            let required = false;
+            if (line[1] === '必填' || line[1] === 'true') {
+              required = true;
+            }
+            keyValues.push(new KeyValue({name: line[0], required: required, value: line[2], description: line[3], type: "text", valid: false, file: false, encode: true, enable: true, contentType: "text/plain"}));
+          })
+          keyValues.forEach(item => {
+            switch (this.activeName) {
+              case "parameters":
+                this.request.arguments.unshift(item);
+                break;
+              case "rest":
+                this.request.rest.unshift(item);
+                break;
+              default:
+                break;
+            }
+          })
+        }
       }
     }
   }
@@ -272,4 +324,8 @@
     border: #E6EEF2;
   }
 
+  .ms-el-link {
+    float: right;
+    margin-right: 45px;
+  }
 </style>

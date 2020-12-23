@@ -244,73 +244,73 @@ public class ApiScenarioExample {
             return (Criteria) this;
         }
 
-        public Criteria andTagIdIsNull() {
-            addCriterion("tag_id is null");
+        public Criteria andTagsIsNull() {
+            addCriterion("tags is null");
             return (Criteria) this;
         }
 
-        public Criteria andTagIdIsNotNull() {
-            addCriterion("tag_id is not null");
+        public Criteria andTagsIsNotNull() {
+            addCriterion("tags is not null");
             return (Criteria) this;
         }
 
-        public Criteria andTagIdEqualTo(String value) {
-            addCriterion("tag_id =", value, "tagId");
+        public Criteria andTagsEqualTo(String value) {
+            addCriterion("tags =", value, "tags");
             return (Criteria) this;
         }
 
-        public Criteria andTagIdNotEqualTo(String value) {
-            addCriterion("tag_id <>", value, "tagId");
+        public Criteria andTagsNotEqualTo(String value) {
+            addCriterion("tags <>", value, "tags");
             return (Criteria) this;
         }
 
-        public Criteria andTagIdGreaterThan(String value) {
-            addCriterion("tag_id >", value, "tagId");
+        public Criteria andTagsGreaterThan(String value) {
+            addCriterion("tags >", value, "tags");
             return (Criteria) this;
         }
 
-        public Criteria andTagIdGreaterThanOrEqualTo(String value) {
-            addCriterion("tag_id >=", value, "tagId");
+        public Criteria andTagsGreaterThanOrEqualTo(String value) {
+            addCriterion("tags >=", value, "tags");
             return (Criteria) this;
         }
 
-        public Criteria andTagIdLessThan(String value) {
-            addCriterion("tag_id <", value, "tagId");
+        public Criteria andTagsLessThan(String value) {
+            addCriterion("tags <", value, "tags");
             return (Criteria) this;
         }
 
-        public Criteria andTagIdLessThanOrEqualTo(String value) {
-            addCriterion("tag_id <=", value, "tagId");
+        public Criteria andTagsLessThanOrEqualTo(String value) {
+            addCriterion("tags <=", value, "tags");
             return (Criteria) this;
         }
 
-        public Criteria andTagIdLike(String value) {
-            addCriterion("tag_id like", value, "tagId");
+        public Criteria andTagsLike(String value) {
+            addCriterion("tags like", value, "tags");
             return (Criteria) this;
         }
 
-        public Criteria andTagIdNotLike(String value) {
-            addCriterion("tag_id not like", value, "tagId");
+        public Criteria andTagsNotLike(String value) {
+            addCriterion("tags not like", value, "tags");
             return (Criteria) this;
         }
 
-        public Criteria andTagIdIn(List<String> values) {
-            addCriterion("tag_id in", values, "tagId");
+        public Criteria andTagsIn(List<String> values) {
+            addCriterion("tags in", values, "tags");
             return (Criteria) this;
         }
 
-        public Criteria andTagIdNotIn(List<String> values) {
-            addCriterion("tag_id not in", values, "tagId");
+        public Criteria andTagsNotIn(List<String> values) {
+            addCriterion("tags not in", values, "tags");
             return (Criteria) this;
         }
 
-        public Criteria andTagIdBetween(String value1, String value2) {
-            addCriterion("tag_id between", value1, value2, "tagId");
+        public Criteria andTagsBetween(String value1, String value2) {
+            addCriterion("tags between", value1, value2, "tags");
             return (Criteria) this;
         }
 
-        public Criteria andTagIdNotBetween(String value1, String value2) {
-            addCriterion("tag_id not between", value1, value2, "tagId");
+        public Criteria andTagsNotBetween(String value1, String value2) {
+            addCriterion("tags not between", value1, value2, "tags");
             return (Criteria) this;
         }
 
@@ -1001,76 +1001,6 @@ public class ApiScenarioExample {
 
         public Criteria andScheduleNotBetween(String value1, String value2) {
             addCriterion("schedule not between", value1, value2, "schedule");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionIsNull() {
-            addCriterion("description is null");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionIsNotNull() {
-            addCriterion("description is not null");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionEqualTo(String value) {
-            addCriterion("description =", value, "description");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionNotEqualTo(String value) {
-            addCriterion("description <>", value, "description");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionGreaterThan(String value) {
-            addCriterion("description >", value, "description");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionGreaterThanOrEqualTo(String value) {
-            addCriterion("description >=", value, "description");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionLessThan(String value) {
-            addCriterion("description <", value, "description");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionLessThanOrEqualTo(String value) {
-            addCriterion("description <=", value, "description");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionLike(String value) {
-            addCriterion("description like", value, "description");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionNotLike(String value) {
-            addCriterion("description not like", value, "description");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionIn(List<String> values) {
-            addCriterion("description in", values, "description");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionNotIn(List<String> values) {
-            addCriterion("description not in", values, "description");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionBetween(String value1, String value2) {
-            addCriterion("description between", value1, value2, "description");
-            return (Criteria) this;
-        }
-
-        public Criteria andDescriptionNotBetween(String value1, String value2) {
-            addCriterion("description not between", value1, value2, "description");
             return (Criteria) this;
         }
 

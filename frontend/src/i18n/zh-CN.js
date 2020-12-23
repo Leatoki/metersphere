@@ -1,5 +1,6 @@
 export default {
   commons: {
+    please_fill_in_the_template: '请填写模版内容',
     cut_back_old_version: '切回旧版',
     cut_back_new_version: '切回新版',
     comment: '评论',
@@ -123,6 +124,7 @@ export default {
     already_exists: '名称不能重复',
     modifier: '修改人',
     validate: "校验",
+    batch_add: "批量添加",
     date: {
       select_date: '选择日期',
       start_date: '开始日期',
@@ -165,7 +167,12 @@ export default {
         current_user: "是当前用户"
       }
     },
-    monitor: "监控"
+    monitor: "监控",
+    all_label: {
+      case: "全部用例",
+      review: "全部评审"
+    },
+    image: '镜像'
   },
   license: {
     title: '授权管理',
@@ -295,6 +302,8 @@ export default {
     jira_key: 'JIRA项目key',
     zentao_id: 'Zentao项目ID',
     manager: '项目管理',
+    no_data: '无数据',
+    select: '选择项目'
   },
   member: {
     create: '添加成员',
@@ -489,7 +498,7 @@ export default {
       api_case_passing_rate: "用例通过率",
       create_tip: "注: 详细的接口信息可以在编辑页面填写",
       request: {
-        grade_info: "按等级从高到低",
+        grade_info: "按等级筛选",
         run_env: "运行环境",
         select_case: "搜索用例",
         case: "用例",
@@ -536,6 +545,7 @@ export default {
         create_info: '创建',
         update_info: '更新',
         batch_edit: "批量编辑",
+        path_valid_info: "请求路径无效",
       }
     },
     automation: {
@@ -572,6 +582,7 @@ export default {
       remove: "删除",
       view_ref: "查看引用",
       case_ref: "用例引用",
+      schedule: "定时任务",
       scenario_ref: "场景引用",
       plan_ref: "测试计划引用",
       batch_add_plan: "添加到测试计划",
@@ -583,7 +594,7 @@ export default {
         select_table: "选择可见数据",
         select_all: "选择全部数据"
       },
-      report_name_info: '请输入报名名称',
+      report_name_info: '请输入报告名称',
       save_case_info: '请先保存用例',
       reference_deleted: '引用已删除',
     },
@@ -785,6 +796,101 @@ export default {
       swagger_export_tip: "通过 Swagger 页面导出",
       suffixFormatErr: "文件格式不符合要求",
       swagger_url_import: "使用URL导入",
+    },
+    home_page: {
+      unit_of_measurement: "个",
+      api_count_card: {
+        title: "接口数量统计",
+      },
+      test_case_count_card: {
+        title: "接口用例数量统计",
+      },
+      test_scene_count_card: {
+        title: "场景用例数量统计",
+      },
+      schedule_task_count_card: {
+        title: "定时任务数量统计",
+      },
+      detail_card: {
+        running: "进行中",
+        not_started: "未开始",
+        finished: "已完成",
+        uncoverage: "未覆盖",
+        coverage: "已覆盖",
+        unexecute: "未执行",
+        execution_failed: "未通过",
+        execution_pass: "已通过",
+        failed: "失败",
+        success: "成功",
+        rate: {
+          completion: "完成率",
+          coverage: "覆盖率",
+          pass: "通过率",
+          success: "成功率",
+        },
+      },
+      api_details_card: {
+        title: "接口",
+        this_week_add: "本周新增: {0}个",
+      },
+      test_case_details_card: {
+        title: "用例",
+        this_week_add: "本周新增: {0}个",
+        this_week_execute: "本周执行: {0}次",
+        executed: "历史总执行: {0}次",
+        this_week_add_sm: "本周新增:<br/>{0}个",
+        this_week_execute_sm: "本周执行:<br/>{0}次",
+        executed_sm: "历史总执行:<br/>{0}次",
+      },
+      test_scene_details_card: {
+        title: "场景",
+        this_week_add: "本周新增: {0}个",
+        this_week_execute: "本周执行: {0}次",
+        executed: "历史总执行: {0}次",
+        this_week_add_sm: "本周新增:<br/>{0}个",
+        this_week_execute_sm: "本周执行:<br/>{0}次",
+        executed_sm: "历史总执行:<br/>{0}次",
+      },
+      schedule_task_details_card: {
+        title: "定时任务",
+        this_week_add: "本周新增: {0}个",
+        this_week_execute: "本周执行: {0}次",
+        executed: "历史总执行: {0}次",
+        this_week_add_sm: "本周新增:<br/>{0}个",
+        this_week_execute_sm: "本周执行:<br/>{0}次",
+        executed_sm: "历史总执行:<br/>{0}次",
+      },
+      failed_case_list: {
+        title: "过去7天测试计划失败用例TOP 10",
+        table_coloum: {
+          index: "排名",
+          case_name: "用例名称",
+          case_type: "用例类型",
+          test_plan: "所属测试计划",
+          failure_times: "失败次数",
+        },
+        table_value: {
+          case_type: {
+            api: "接口用例",
+            scene: "场景用例",
+          }
+        }
+      },
+      running_task_list: {
+        title: "运行中的定时任务",
+        table_coloum: {
+          index: "序号",
+          scenario: "场景名称",
+          run_rule: "运行规则",
+          task_status: "任务状态",
+          next_execution_time: "下次执行时间",
+          create_user: "创建人",
+          update_time: "更新时间",
+        },
+        confirm: {
+          close_title: "要关闭这条定时任务吗？",
+        }
+      }
     }
   },
   api_report: {

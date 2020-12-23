@@ -1,7 +1,7 @@
 <template>
   <ms-container>
     <ms-aside-container>
-      <ms-node-tree @selectModule="selectModule" @getApiModuleTree="initTree" @changeProtocol="changeProtocol"
+      <ms-node-tree @nodeSelectEvent="selectModule" @getApiModuleTree="initTree" @protocolChange="changeProtocol"
                     @refresh="refresh" @saveAsEdit="editApi" @exportAPI="exportAPI"/>
     </ms-aside-container>
 
@@ -32,7 +32,7 @@
 </template>
 
 <script>
-  import MsNodeTree from '../../../definition/components/ApiModule';
+  import MsNodeTree from '../../../definition/components/module/ApiModule';
   import MsApiList from './ApiList';
   import MsContainer from "../../../../common/components/MsContainer";
   import MsMainContainer from "../../../../common/components/MsMainContainer";
@@ -85,7 +85,7 @@
         this.isHide = true;
       },
       selectModule(data) {
-        this.currentModule = data;
+        this.currentModule = data.data;
       },
       exportAPI() {
         if (!this.$refs.apiList[0].tableData) {

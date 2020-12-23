@@ -13,12 +13,12 @@
                     <el-option v-for="(environment, index) in environments" :key="index"
                                :label="environment.name + (environment.config.httpConfig.socket ? (': ' + environment.config.httpConfig.protocol + '://' + environment.config.httpConfig.socket) : '')"
                                :value="environment.id"/>
-                    <el-button class="environment-button" size="mini" type="primary" @click="openEnvironmentConfig">
+                    <el-button class="environment-button" size="small" type="primary" @click="openEnvironmentConfig">
                       {{ $t('api_test.environment.environment_config') }}
                     </el-button>
                     <template v-slot:empty>
                       <div class="empty-environment">
-                        <el-button class="environment-button" size="mini" type="primary" @click="openEnvironmentConfig">
+                        <el-button class="environment-button" size="small" type="primary" @click="openEnvironmentConfig">
                           {{ $t('api_test.environment.environment_config') }}
                         </el-button>
                       </div>
@@ -27,9 +27,9 @@
                 </el-form-item>
               </el-col>
               <el-col :span="8">
-                <el-form-item :label="$t('api_test.request.sql.dataSource')" prop="dataSource" style="margin-left: 10px">
-                  <el-select v-model="request.dataSource" size="small">
-                    <el-option v-for="(item, index) in databaseConfigsOptions" :key="index" :value="item" :label="item.name"/>
+                <el-form-item :label="$t('api_test.request.sql.dataSource')" prop="dataSourceId" style="margin-left: 10px">
+                  <el-select v-model="request.dataSourceId" size="small">
+                    <el-option v-for="(item, index) in databaseConfigsOptions" :key="index" :value="item.id" :label="item.name"/>
                   </el-select>
                 </el-form-item>
 
@@ -43,11 +43,11 @@
 
 
             <el-form-item :label="$t('api_test.request.sql.result_variable')" prop="resultVariable">
-              <el-input v-model="request.resultVariable" maxlength="300" show-word-limit/>
+              <el-input v-model="request.resultVariable" maxlength="300" show-word-limit size="small"/>
             </el-form-item>
 
             <el-form-item :label="$t('api_test.request.sql.variable_names')" prop="variableNames">
-              <el-input v-model="request.variableNames" maxlength="300" show-word-limit/>
+              <el-input v-model="request.variableNames" maxlength="300" show-word-limit size="small"/>
             </el-form-item>
 
             <el-tabs v-model="activeName">
@@ -77,7 +77,7 @@
 
         </div>
       </el-col>
-      <el-col :span="3" class="ms-left-cell">
+      <el-col :span="3" class="ms-left-cell" v-if="showScript">
 
         <el-button class="ms-left-buttion" size="small" style="color: #B8741A;background-color: #F9F1EA" @click="addPre">+{{$t('api_test.definition.request.pre_script')}}</el-button>
         <br/>
@@ -120,6 +120,10 @@
       request: {},
       basisData: {},
       moduleOptions: Array,
+      showScript: {
+        type: Boolean,
+        default: true,
+      },
       isReadOnly: {
         type: Boolean,
         default: false
@@ -132,9 +136,14 @@
         isReloadData: false,
         activeName: "variables",
         rules: {
-          environmentId: [{required: true, message: this.$t('test_track.case.input_maintainer'), trigger: 'change'}],
-          dataSource: [{required: true, message: this.$t('api_test.request.sql.dataSource'), trigger: 'change'}],
+          environmentId: [{required: true, message: this.$t('api_test.definition.request.run_env'), trigger: 'change'}],
+          dataSourceId: [{required: true, message: this.$t('api_test.request.sql.dataSource'), trigger: 'change'}],
         },
+      }
+    },
+    watch: {
+      'request.dataSourceId'() {
+        this.setDataSource();
       }
     },
     created() {
@@ -167,8 +176,7 @@
         this.reload();
       },
       copyRow(row) {
-        let obj = {};
-        Object.assign(obj, row);
+        let obj = JSON.parse(JSON.stringify(row));
         obj.id = getUUID();
         this.request.hashTree.push(obj);
         this.reload();
@@ -201,6 +209,16 @@
           this.environments.forEach(environment => {
             parseEnvironment(environment);
           });
+          let hasEnvironment = false;
+          for (let i in this.environments) {
+            if (this.environments[i].id === this.request.environmentId) {
+              hasEnvironment = true;
+              break;
+            }
+          }
+          if (!hasEnvironment) {
+            this.request.environmentId = undefined;
+          }
           this.initDataSource();
         });
       },
@@ -213,7 +231,15 @@
             this.databaseConfigsOptions = [];
             this.environments[i].config.databaseConfigs.forEach(item => {
               this.databaseConfigsOptions.push(item);
-            })
+            });
+            break;
+          }
+        }
+      },
+      setDataSource() {
+        for (let item of this.databaseConfigsOptions) {
+          if (this.request.dataSourceId === item.id) {
+            this.request.dataSource = item;
             break;
           }
         }

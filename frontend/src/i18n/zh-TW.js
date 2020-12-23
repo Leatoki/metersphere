@@ -1,5 +1,6 @@
 export default {
   commons: {
+    please_fill_in_the_template: '請填寫模版內容',
     cut_back_old_version: '切回舊版',
     cut_back_new_version: '切回新版',
     comment: '評論',
@@ -123,6 +124,7 @@ export default {
     already_exists: '名稱不能重復',
     modifier: '修改人',
     validate: "校驗",
+    batch_add: "批量添加",
     date: {
       select_date: '選擇日期',
       start_date: '開始日期',
@@ -165,7 +167,12 @@ export default {
         current_user: "是當前用戶"
       }
     },
-    monitor:"監控"
+    monitor: "監控",
+    all_label: {
+      case: "全部用例",
+      review: "全部評審"
+    },
+    image: '鏡像'
   },
   license: {
     title: '授權管理',
@@ -295,6 +302,8 @@ export default {
     jira_key: 'JIRA項目key',
     zentao_id: 'Zentao項目ID',
     manager: '項目管理',
+    no_data: '無數據',
+    select: '選擇項目'
   },
   member: {
     create: '添加成員',
@@ -489,7 +498,7 @@ export default {
       api_case_passing_rate: "用例通過率",
       create_tip: "註: 詳細的接口信息可以在編輯頁面填寫",
       request: {
-        grade_info: "按等級從高到低",
+        grade_info: "按等級筛选",
         run_env: "運行環境",
         select_case: "搜索用例",
         case: "用例",
@@ -536,6 +545,7 @@ export default {
         create_info: '創建',
         update_info: '更新',
         batch_edit: "批量編輯",
+        path_valid_info: "請求路径无效",
       }
     },
     automation: {
@@ -572,6 +582,7 @@ export default {
       remove: "删除",
       view_ref: "查看引用",
       case_ref: "用例引用",
+      schedule: "定時任務",
       scenario_ref: "场景引用",
       plan_ref: "测试计划引用",
       batch_add_plan: "添加到测试计划",
@@ -583,7 +594,7 @@ export default {
         select_table: "選擇可見數據",
         select_all: "選擇全部數據"
       },
-      report_name_info: '請輸入報名名稱',
+      report_name_info: '請輸入報告名稱',
       save_case_info: '請先保存用例',
       reference_deleted: '引用已删除',
     },
@@ -784,6 +795,101 @@ export default {
       swagger_export_tip: "通過 Swagger 頁面導出",
       suffixFormatErr: "文件格式不符合要求",
       swagger_url_import: "使用URL導入",
+    },
+    home_page:{
+      unit_of_measurement:"個",
+      api_count_card:{
+        title: "接口數量統計",
+      },
+      test_case_count_card:{
+        title: "接口用例數量統計",
+      },
+      test_scene_count_card:{
+        title: "場景用例數量統計",
+      },
+      schedule_task_count_card:{
+        title: "定時任務數量統計",
+      },
+      detail_card:{
+        running:"進行中",
+        not_started:"未開始",
+        finished:"已完成",
+        uncoverage:"未覆蓋",
+        coverage:"已覆蓋",
+        unexecute:"未執行",
+        execution_failed:"未通過",
+        execution_pass:"已通過",
+        failed:"失敗",
+        success:"成功",
+        rate:{
+          completion:"完成率",
+          coverage:"覆蓋率",
+          pass:"通過率",
+          success:"成功率",
+        },
+      },
+      api_details_card:{
+        title: "接口",
+        this_week_add:"本週新增: {0}个",
+      },
+      test_case_details_card:{
+        title: "用例",
+        this_week_add:"本週新增: {0}个",
+        this_week_execute:"本週執行: {0}次",
+        executed:"歷史總執行: {0}次",
+        this_week_add_sm:"本週新增:<br/>{0}个",
+        this_week_execute_sm:"本週執行:<br/>{0}次",
+        executed_sm:"歷史總執行:<br/>{0}次",
+      },
+      test_scene_details_card:{
+        title: "場景",
+        this_week_add:"本週新增: {0}个",
+        this_week_execute:"本週執行: {0}次",
+        executed:"歷史總執行: {0}次",
+        this_week_add_sm:"本週新增:<br/>{0}个",
+        this_week_execute_sm:"本週執行:<br/>{0}次",
+        executed_sm:"歷史總執行:<br/>{0}次",
+      },
+      schedule_task_details_card:{
+        title: "定時任務",
+        this_week_add:"本週新增: {0}个",
+        this_week_execute:"本週執行: {0}次",
+        executed:"歷史總執行: {0}次",
+        this_week_add_sm:"本週新增:<br/>{0}个",
+        this_week_execute_sm:"本週執行:<br/>{0}次",
+        executed_sm:"歷史總執行:<br/>{0}次",
+      },
+      failed_case_list:{
+        title: "過去7天測試計畫失敗用例TOP 10",
+        table_coloum:{
+          index: "排名",
+          case_name: "用例名稱",
+          case_type: "用例類型",
+          test_plan: "所屬測試計畫",
+          failure_times: "失敗次數",
+        },
+        table_value:{
+          case_type:{
+            api: "接口用例",
+            scene: "場景用例",
+          }
+        }
+      },
+      running_task_list:{
+        title: "運行中的定時任務",
+        table_coloum:{
+          index: "序號",
+          scenario: "場景名稱",
+          run_rule: "運行規則",
+          task_status: "任務狀態",
+          next_execution_time: "下次執行時間",
+          create_user: "創建人",
+          update_time: "更新時間",
+        },
+        confirm:{
+          close_title: "要關閉這條定時任務嗎？",
+        }
+      }
     }
   },
   api_report: {
@@ -823,14 +929,14 @@ export default {
     not_exist: "測試報告不存在",
   },
   api_monitor: {
-    to:"到",
-    start_time:"開始時間",
-    end_time:"結束時間",
-    today:"今天",
-    this_week:"本週",
-    this_mouth:"本月",
-    please_search:"請搜索",
-    date:"日期"
+    to: "到",
+    start_time: "開始時間",
+    end_time: "結束時間",
+    today: "今天",
+    this_week: "本週",
+    this_mouth: "本月",
+    please_search: "請搜索",
+    date: "日期"
   },
   test_track: {
     test_track: "測試跟蹤",

@@ -2,16 +2,17 @@
   <div class="text-container">
 
     <el-tabs v-model="activeName" v-show="isActive">
-      <el-tab-pane :label="$t('api_test.definition.request.response_header')" name="headers" class="pane">
-        <pre>{{ response.responseResult.headers }}</pre>
-      </el-tab-pane>
       <el-tab-pane :label="$t('api_test.definition.request.response_body')" name="body" class="pane">
         <ms-sql-result-table v-if="isSqlType" :body="response.responseResult.body"/>
         <ms-code-edit v-if="!isSqlType" :mode="mode" :read-only="true" :modes="modes" :data.sync="response.responseResult.body" ref="codeEdit"/>
       </el-tab-pane>
-      <el-tab-pane label="Cookie" name="cookie" class="pane cookie">
-        <pre>{{response.cookies}}</pre>
+
+      <el-tab-pane :label="$t('api_test.definition.request.response_header')" name="headers" class="pane">
+        <pre>{{ response.responseResult.headers }}</pre>
       </el-tab-pane>
+      <!--<el-tab-pane label="Cookie" name="cookie" class="pane cookie">-->
+      <!--<pre>{{response.cookies}}</pre>-->
+      <!--</el-tab-pane>-->
 
       <el-tab-pane :label="$t('api_test.definition.request.console')" name="console" class="pane">
         <pre>{{response.responseResult.console}}</pre>
@@ -26,17 +27,21 @@
       </el-tab-pane>
 
       <el-tab-pane :label="$t('api_report.request_body')" name="request_body" class="pane">
-        <div>
-          {{$t('api_test.request.address')}} : {{ response.url }}
+        <div class="ms-div">
+          {{$t('api_test.request.address')}} :
+          <pre>{{ response.url }}</pre>
         </div>
-        <div>
-          {{$t('api_test.scenario.headers')}} : {{ response.headers }}
+        <div class="ms-div">
+          {{$t('api_test.scenario.headers')}} :
+          <pre>{{ response.headers }}</pre>
         </div>
-        <div>
-          Cookies : {{response.cookies}}
+        <div class="ms-div">
+          Cookies :
+          <pre>{{response.cookies}}</pre>
         </div>
-        <div>
-          Body : {{response.body}}
+        <div class="ms-div">
+          Body :
+          <pre>{{response.body}}</pre>
         </div>
 
       </el-tab-pane>
@@ -45,7 +50,6 @@
         <template v-slot:label>
           <ms-dropdown v-if="currentProtocol==='SQL'" :commands="sqlModes" :default-command="mode" @command="sqlModeChange"/>
           <ms-dropdown v-else :commands="modes" :default-command="mode" @command="modeChange"/>
-
         </template>
       </el-tab-pane>
     </el-tabs>
@@ -77,7 +81,7 @@
     data() {
       return {
         isActive: true,
-        activeName: "headers",
+        activeName: "body",
         modes: ['text', 'json', 'xml', 'html'],
         sqlModes: ['text', 'table'],
         mode: BODY_FORMAT.TEXT
@@ -137,6 +141,10 @@
 
   /deep/ .el-tabs__nav-wrap::after {
     height: 0px;
+  }
+
+  .ms-div {
+    margin-top: 20px;
   }
 
   pre {

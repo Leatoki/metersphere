@@ -6,16 +6,16 @@ import io.metersphere.api.dto.APIReportResult;
 import io.metersphere.api.dto.ApiTestImportRequest;
 import io.metersphere.api.dto.automation.ApiScenarioRequest;
 import io.metersphere.api.dto.automation.ReferenceDTO;
-import io.metersphere.api.dto.definition.ApiDefinitionRequest;
-import io.metersphere.api.dto.definition.ApiDefinitionResult;
-import io.metersphere.api.dto.definition.RunDefinitionRequest;
-import io.metersphere.api.dto.definition.SaveApiDefinitionRequest;
+import io.metersphere.api.dto.definition.*;
+import io.metersphere.api.dto.definition.parse.ApiDefinitionImport;
 import io.metersphere.api.service.ApiDefinitionService;
 import io.metersphere.base.domain.ApiDefinition;
 import io.metersphere.commons.constants.RoleConstants;
 import io.metersphere.commons.utils.PageUtils;
 import io.metersphere.commons.utils.Pager;
 import io.metersphere.commons.utils.SessionUtils;
+import io.metersphere.service.CheckPermissionService;
+import io.metersphere.track.request.testcase.ApiCaseRelevanceRequest;
 import org.apache.shiro.authz.annotation.Logical;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +31,8 @@ import java.util.List;
 public class ApiDefinitionController {
     @Resource
     private ApiDefinitionService apiDefinitionService;
+    @Resource
+    private CheckPermissionService checkPermissionService;
 
     @PostMapping("/list/{goPage}/{pageSize}")
     public Pager<List<ApiDefinitionResult>> list(@PathVariable int goPage, @PathVariable int pageSize, @RequestBody ApiDefinitionRequest request) {
@@ -40,28 +42,41 @@ public class ApiDefinitionController {
     }
 
     @PostMapping(value = "/create", consumes = {"multipart/form-data"})
+    @RequiresRoles(value = {RoleConstants.TEST_MANAGER, RoleConstants.TEST_USER}, logical = Logical.OR)
     public void create(@RequestPart("request") SaveApiDefinitionRequest request, @RequestPart(value = "files") List<MultipartFile> bodyFiles) {
+        checkPermissionService.checkReadOnlyUser();
         apiDefinitionService.create(request, bodyFiles);
     }
 
     @PostMapping(value = "/update", consumes = {"multipart/form-data"})
+    @RequiresRoles(value = {RoleConstants.TEST_MANAGER, RoleConstants.TEST_USER}, logical = Logical.OR)
     public void update(@RequestPart("request") SaveApiDefinitionRequest request, @RequestPart(value = "files") List<MultipartFile> bodyFiles) {
+        checkPermissionService.checkReadOnlyUser();
         apiDefinitionService.update(request, bodyFiles);
     }
 
     @GetMapping("/delete/{id}")
+    @RequiresRoles(value = {RoleConstants.TEST_MANAGER, RoleConstants.TEST_USER}, logical = Logical.OR)
     public void delete(@PathVariable String id) {
+        checkPermissionService.checkReadOnlyUser();
         apiDefinitionService.delete(id);
     }
 
     @PostMapping("/deleteBatch")
+    @RequiresRoles(value = {RoleConstants.TEST_MANAGER, RoleConstants.TEST_USER}, logical = Logical.OR)
     public void deleteBatch(@RequestBody List<String> ids) {
         apiDefinitionService.deleteBatch(ids);
     }
 
     @PostMapping("/removeToGc")
+    @RequiresRoles(value = {RoleConstants.TEST_MANAGER, RoleConstants.TEST_USER}, logical = Logical.OR)
     public void removeToGc(@RequestBody List<String> ids) {
         apiDefinitionService.removeToGc(ids);
+    }
+
+    @PostMapping("/reduction")
+    public void reduction(@RequestBody List<SaveApiDefinitionRequest> requests) {
+        apiDefinitionService.reduction(requests);
     }
 
     @GetMapping("/get/{id}")
@@ -89,9 +104,14 @@ public class ApiDefinitionController {
         return apiDefinitionService.getDbResult(testId);
     }
 
+    @GetMapping("/report/getReport/{testId}/{type}")
+    public APIReportResult getReport(@PathVariable String testId, @PathVariable String type) {
+        return apiDefinitionService.getDbResult(testId, type);
+    }
+
     @PostMapping(value = "/import", consumes = {"multipart/form-data"})
     @RequiresRoles(value = {RoleConstants.TEST_USER, RoleConstants.TEST_MANAGER}, logical = Logical.OR)
-    public String testCaseImport(@RequestPart(value = "file", required = false) MultipartFile file, @RequestPart("request") ApiTestImportRequest request) {
+    public ApiDefinitionImport testCaseImport(@RequestPart(value = "file", required = false) MultipartFile file, @RequestPart("request") ApiTestImportRequest request) {
         return apiDefinitionService.apiTestImport(file, request);
     }
 
@@ -100,4 +120,14 @@ public class ApiDefinitionController {
         return apiDefinitionService.getReference(request);
     }
 
+    @PostMapping("/batch/edit")
+    @RequiresRoles(value = {RoleConstants.TEST_USER, RoleConstants.TEST_MANAGER}, logical = Logical.OR)
+    public void editApiBath(@RequestBody ApiBatchRequest request) {
+        apiDefinitionService.editApiBath(request);
+    }
+
+    @PostMapping("/relevance")
+    public void testPlanRelevance(@RequestBody ApiCaseRelevanceRequest request) {
+        apiDefinitionService.testPlanRelevance(request);
+    }
 }

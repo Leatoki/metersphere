@@ -21,5 +21,7 @@ public class ApiModule implements Serializable {
 
     private Long updateTime;
 
+    private Double pos;
+
     private static final long serialVersionUID = 1L;
 }

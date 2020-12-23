@@ -89,17 +89,25 @@
 
     <select id="selectByIds" resultType="io.metersphere.api.dto.definition.ApiComputeResult">
         select t1.api_definition_id apiDefinitionId,count(t1.id) caseTotal,
-        case t2.status
-        when 'success' then '通过'
-        when 'error' then '未通过'
-        ELSE '未执行' end as status ,
-        CONCAT(FORMAT(SUM(IF(t2.`status` = 'success', 1, 0))/ COUNT(t1.id)*100, 2), '%') passRate
-        from api_test_case t1 left join api_definition_exec_result t2 on t1.id = t2.resource_id
+            case t2.status
+            when 'success' then '通过'
+            when 'error' then '未通过'
+            ELSE '未执行' end as status ,
+            CONCAT(FORMAT(SUM(IF(t2.`status` = 'success', 1, 0))/ COUNT(t1.id)*100, 2), '%') passRate
+            from api_test_case t1
+        left join (
+            select
+              max(create_time) create_time ,status ,id, resource_id
+            from
+              api_definition_exec_result
+            group by
+              resource_id
+            )as t2
+            on t1.id = t2.resource_id
         group by t1.api_definition_id having t1.api_definition_id in
         <foreach collection="ids" item="v" separator="," open="(" close=")">
             #{v}
         </foreach>
-        order by t2.end_time desc;
     </select>
 
     <sql id="combine">
@@ -255,4 +263,33 @@
             #{v}
         </foreach>
     </update>
+
+    <update id="reduction">
+        update api_definition
+        set
+        status = 'Underway'
+        where id in
+        <foreach collection="ids" item="v" separator="," open="(" close=")">
+            #{v}
+        </foreach>
+    </update>
+
+    <select id="countProtocolByProjectID" resultType="io.metersphere.api.dto.datacount.ApiDataCountResult">
+        SELECT protocol AS groupField,count(id) AS countNumber FROM api_definition  WHERE project_id = #{0} AND `status` != 'Trash' GROUP BY protocol
+    </select>
+    <select id="countStateByProjectID" resultType="io.metersphere.api.dto.datacount.ApiDataCountResult">
+        SELECT status AS groupField,count(id) AS countNumber FROM api_definition  WHERE project_id = #{0} AND `status` != 'Trash' GROUP BY status
+    </select>
+    <select id="countByProjectIDAndCreateInThisWeek" resultType="java.lang.Long">
+        SELECT count(id) AS countNumber FROM api_definition
+        WHERE project_id = #{projectId}
+        AND create_time BETWEEN #{firstDayTimestamp} AND #{lastDayTimestamp} AND `status` != 'Trash'
+    </select>
+    <select id="countApiCoverageByProjectID" resultType="io.metersphere.api.dto.datacount.ApiDataCountResult">
+        SELECT count(api.id) AS countNumber, if(test_case_api.api_definition_id is null,"uncoverage","coverage") AS groupField  FROM api_definition api left Join (
+            SELECT DISTINCT api_definition_id FROM api_test_case
+        ) test_case_api ON api.id = test_case_api.api_definition_id
+        WHERE api.project_id = #{0} and  api.`status` != 'Trash'
+        GROUP BY groupField
+    </select>
 </mapper>

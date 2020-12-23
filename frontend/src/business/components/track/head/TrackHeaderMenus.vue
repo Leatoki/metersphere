@@ -2,21 +2,10 @@
 
   <div id="menu-bar" v-if="isRouterAlive">
     <el-row type="flex">
-      <el-col :span="12">
+      <project-change :project-name="currentProject"/>
+      <el-col :span="14">
         <el-menu class="header-menu" :unique-opened="true" mode="horizontal" router
                  :default-active='$route.path'>
-          <el-submenu :class="{'deactivation':!isProjectActivation}"
-                      v-permission="['test_manager','test_user','test_viewer']" index="3" popper-class="submenu">
-            <template v-slot:title>{{ $t('commons.project') }}</template>
-            <search-list ref="projectRecent" :options="projectRecent"/>
-            <el-divider/>
-            <el-menu-item :index="'/setting/project/create'">
-              <font-awesome-icon :icon="['fa', 'plus']"/>
-              <span style="padding-left: 7px;">{{ $t("project.create") }}</span>
-            </el-menu-item>
-            <ms-show-all :index="'/setting/project/all'"/>
-          </el-submenu>
-
           <el-menu-item :index="'/track/home'">
             {{ $t("i18n.home") }}
           </el-menu-item>
@@ -54,7 +43,7 @@
           </el-submenu>
         </el-menu>
       </el-col>
-      <el-col :span="12"/>
+      <el-col :span="8"/>
     </el-row>
   </div>
 
@@ -66,10 +55,11 @@ import MsRecentList from "../../common/head/RecentList";
 import MsCreateButton from "../../common/head/CreateButton";
 import {LIST_CHANGE, TrackEvent} from "@/business/components/common/head/ListEvent";
 import SearchList from "@/business/components/common/head/SearchList";
+import ProjectChange from "@/business/components/common/head/ProjectSwitch";
 
 export default {
   name: "TrackHeaderMenus",
-  components: {SearchList, MsShowAll, MsRecentList, MsCreateButton},
+  components: {ProjectChange, SearchList, MsShowAll, MsRecentList, MsCreateButton},
   data() {
     return {
       testPlanViewPath: '',
@@ -78,16 +68,7 @@ export default {
       testCaseReviewEditPath: '',
       testCaseProjectPath: '',
       isProjectActivation: true,
-      projectRecent: {
-        title: this.$t('project.recent'),
-        url: "/project/recent/5",
-        index: function (item) {
-          return '/track/case/' + item.id;
-        },
-        router: function (item) {
-          return {name: 'testCase', params: {projectId: item.id, projectName: item.name}}
-        }
-      },
+      currentProject: '',
       caseRecent: {
         title: this.$t('test_track.recent_case'),
         url: "/test/case/recent/5",
@@ -135,14 +116,6 @@ export default {
     },
     init() {
       let path = this.$route.path;
-      // if (path.indexOf("/track/case") >= 0 && !!this.$route.params.projectId) {
-      //   this.testCaseProjectPath = path;
-      //   //不激活项目菜单栏
-      //   this.isProjectActivation = false;
-      //   this.reload();
-      // } else {
-      //   this.isProjectActivation = true;
-      // }
       if (path.indexOf("/track/plan/view") >= 0) {
         this.testPlanViewPath = path;
         this.reload();
@@ -158,11 +131,7 @@ export default {
     },
     registerEvents() {
       TrackEvent.$on(LIST_CHANGE, () => {
-        // todo 这里偶尔会有 refs 为空的情况
-        if (!this.$refs.projectRecent) {
-          return;
-        }
-        this.$refs.projectRecent.recent();
+        // // todo 这里偶尔会有 refs 为空的情况
         this.$refs.planRecent.recent();
         this.$refs.caseRecent.recent();
       });
@@ -193,5 +162,12 @@ export default {
 .deactivation >>> .el-submenu__title {
   border-bottom: white !important;
 }
+
+/*.project-change {*/
+/*  height: 40px;*/
+/*  line-height: 40px;*/
+/*  color: inherit;*/
+/*  margin-left: 20px;*/
+/*}*/
 
 </style>

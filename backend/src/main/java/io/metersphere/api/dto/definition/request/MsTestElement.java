@@ -76,8 +76,9 @@ public abstract class MsTestElement {
     private String index;
     @JSONField(ordinal = 8)
     private boolean enable = true;
-
     @JSONField(ordinal = 9)
+    private String refType ;
+    @JSONField(ordinal = 10)
     private LinkedList<MsTestElement> hashTree;
 
     // 公共环境逐层传递，如果自身有环境 以自身引用环境为准否则以公共环境作为请求环境
@@ -100,7 +101,7 @@ public abstract class MsTestElement {
             return baos.toString();
         } catch (Exception e) {
             e.printStackTrace();
-            LogUtil.warn("HashTree error, can't log jmx content");
+            LogUtil.warn("HashTree error, can't log jmx scenarioDefinition");
         }
         return null;
     }
@@ -123,9 +124,11 @@ public abstract class MsTestElement {
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             ApiDefinitionWithBLOBs apiDefinition = apiDefinitionService.getBLOBs(this.getId());
-            element = mapper.readValue(apiDefinition.getRequest(), new TypeReference<MsTestElement>() {
-            });
-            hashTree.add(element);
+            if (apiDefinition != null) {
+                element = mapper.readValue(apiDefinition.getRequest(), new TypeReference<MsTestElement>() {
+                });
+                hashTree.add(element);
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
         }

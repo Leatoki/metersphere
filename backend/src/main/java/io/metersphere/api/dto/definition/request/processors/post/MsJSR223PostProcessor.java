@@ -7,6 +7,7 @@ import io.metersphere.api.dto.definition.request.ParameterConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.extractor.JSR223PostProcessor;
 import org.apache.jmeter.save.SaveService;
 import org.apache.jmeter.testelement.TestElement;
@@ -20,10 +21,10 @@ import java.util.List;
 public class MsJSR223PostProcessor extends MsTestElement {
     private String type = "JSR223PostProcessor";
 
-    @JSONField(ordinal = 10)
+    @JSONField(ordinal = 20)
     private String script;
 
-    @JSONField(ordinal = 11)
+    @JSONField(ordinal = 21)
     private String scriptLanguage;
 
 
@@ -33,7 +34,11 @@ public class MsJSR223PostProcessor extends MsTestElement {
         }
         JSR223PostProcessor processor = new JSR223PostProcessor();
         processor.setEnabled(true);
-        processor.setName(this.getName() + "JSR223PostProcessor");
+        if (StringUtils.isNotEmpty(this.getName())) {
+            processor.setName(this.getName());
+        } else {
+            processor.setName("JSR223PostProcessor");
+        }
         processor.setProperty(TestElement.TEST_CLASS, JSR223PostProcessor.class.getName());
         processor.setProperty(TestElement.GUI_CLASS, SaveService.aliasToClass("TestBeanGUI"));
         processor.setProperty("cacheKey", "true");

@@ -5,14 +5,13 @@ import io.metersphere.api.dto.automation.DragApiScenarioModuleRequest;
 import io.metersphere.api.service.ApiScenarioModuleService;
 import io.metersphere.base.domain.ApiScenarioModule;
 import io.metersphere.commons.constants.RoleConstants;
-import io.metersphere.service.CheckOwnerService;
+import io.metersphere.service.CheckPermissionService;
 import org.apache.shiro.authz.annotation.Logical;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 import javax.annotation.Resource;
+import java.util.List;
 
 @RequestMapping("/api/automation/module")
 @RestController
@@ -22,11 +21,11 @@ public class ApiScenarioModuleController {
     @Resource
     ApiScenarioModuleService apiScenarioModuleService;
     @Resource
-    private CheckOwnerService checkOwnerService;
+    private CheckPermissionService checkPermissionService;
 
     @GetMapping("/list/{projectId}")
     public List<ApiScenarioModuleDTO> getNodeByProjectId(@PathVariable String projectId) {
-        checkOwnerService.checkProjectOwner(projectId);
+        checkPermissionService.checkProjectOwner(projectId);
         return apiScenarioModuleService.getNodeTreeByProjectId(projectId);
     }
 
@@ -40,6 +39,12 @@ public class ApiScenarioModuleController {
     @RequiresRoles(value = {RoleConstants.TEST_USER, RoleConstants.TEST_MANAGER}, logical = Logical.OR)
     public int editNode(@RequestBody DragApiScenarioModuleRequest node) {
         return apiScenarioModuleService.editNode(node);
+    }
+
+    @GetMapping("/list/plan/{planId}")
+    public List<ApiScenarioModuleDTO> getNodeByPlanId(@PathVariable String planId) {
+        checkPermissionService.checkTestPlanOwner(planId);
+        return apiScenarioModuleService.getNodeByPlanId(planId);
     }
 
     @PostMapping("/delete")

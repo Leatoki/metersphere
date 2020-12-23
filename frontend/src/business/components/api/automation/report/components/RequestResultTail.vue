@@ -8,32 +8,9 @@
           </div>
         </el-col>
         <el-col :span="10">
-          <div class="name">{{request.name}}</div>
           <el-tooltip effect="dark" :content="request.url" placement="bottom" :open-delay="800">
             <div class="url">{{request.url}}</div>
           </el-tooltip>
-        </el-col>
-        <el-col :span="4">
-          {{request.startTime | timestampFormatDate(true) }}
-        </el-col>
-        <el-col :span="2">
-          <div class="time">
-            {{request.responseResult.responseTime}}
-          </div>
-        </el-col>
-        <el-col :span="2">
-          {{request.error}}
-        </el-col>
-        <el-col :span="2">
-          {{assertion}}
-        </el-col>
-        <el-col :span="2">
-          <el-tag size="mini" type="success" v-if="request.success">
-            {{$t('api_report.success')}}
-          </el-tag>
-          <el-tag size="mini" type="danger" v-else>
-            {{$t('api_report.fail')}}
-          </el-tag>
         </el-col>
       </el-row>
     </div>
@@ -41,21 +18,15 @@
       <div v-show="isActive">
         <el-tabs v-model="activeName" v-show="isActive" v-if="hasSub">
           <el-tab-pane :label="$t('api_report.sub_result')" name="sub">
-            <ms-request-result class="sub-result" v-for="(sub, index) in request.subRequestResults"
-                               :key="index" :request="sub"/>
+            <ms-request-sub-result class="sub-result" v-for="(sub, index) in request.subRequestResults"
+                               :key="index" :indexNumber="index" :request="sub"/>
           </el-tab-pane>
           <el-tab-pane :label="$t('api_report.request_result')" name="result">
-            <ms-request-metric :request="request"/>
-            <ms-request-text :request="request"/>
-            <br>
-            <ms-response-text :request-type="requestType" :response="request.responseResult"/>
+            <ms-response-text :request-type="requestType" :response="request.responseResult" :request="request"/>
           </el-tab-pane>
         </el-tabs>
         <div v-else>
-          <ms-request-metric :request="request"/>
-          <ms-request-text v-if="isCodeEditAlive" :request="request"/>
-          <br>
-          <ms-response-text :request-type="requestType" v-if="isCodeEditAlive" :response="request.responseResult"/>
+          <ms-response-text :request-type="requestType" v-if="isCodeEditAlive" :response="request.responseResult" :request="request"/>
         </div>
       </div>
     </el-collapse-transition>
@@ -68,10 +39,11 @@
   import MsRequestText from "./RequestText";
   import MsResponseText from "./ResponseText";
   import MsRequestResult from "./RequestResult";
+  import MsRequestSubResult from "./RequestSubResult";
 
   export default {
     name: "MsRequestResultTail",
-    components: {MsResponseText, MsRequestText, MsAssertionResults, MsRequestMetric, MsRequestResult},
+    components: {MsResponseText, MsRequestText, MsAssertionResults, MsRequestMetric, MsRequestResult,MsRequestSubResult},
     props: {
       request: Object,
       scenarioName: String,

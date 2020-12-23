@@ -29,7 +29,7 @@
     </el-card>
 
     <!-- 加载用例 -->
-    <ms-api-case-list @apiCaseClose="apiCaseClose" @selectTestCase="selectTestCase" :currentApi="api"
+    <ms-api-case-list @apiCaseClose="apiCaseClose" @refresh="refresh" @selectTestCase="selectTestCase" :currentApi="api"
                       :loaded="loaded" :refreshSign="refreshSign" :createCase="createCase"
                       ref="caseList"/>
 
@@ -45,7 +45,7 @@
 <script>
   import MsApiRequestForm from "../request/http/ApiRequestForm";
   import {downloadFile, getUUID, getCurrentProjectID} from "@/common/js/utils";
-  import MsApiCaseList from "../ApiCaseList";
+  import MsApiCaseList from "../case/ApiCaseList";
   import MsContainer from "../../../../common/components/MsContainer";
   import MsBottomContainer from "../BottomContainer";
   import {parseEnvironment} from "../../model/EnvironmentModel";
@@ -103,6 +103,9 @@
           default:
             return this.runTest();
         }
+      },
+      refresh(){
+        this.$emit('refresh');
       },
       runTest() {
         this.loading = true;

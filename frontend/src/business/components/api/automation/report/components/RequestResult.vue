@@ -17,15 +17,21 @@
 
         <el-col :span="5">
           <el-tooltip effect="dark" :content="request.responseResult.responseCode" placement="bottom" :open-delay="800">
-            <div class="url" style="color: #5daf34">{{ request.responseResult.responseCode }}</div>
+            <div style="color: #5daf34" v-if="request.success">{{ request.responseResult.responseCode }}</div>
+            <div style="color: #FE6F71" v-else>{{ request.responseResult.responseCode }}</div>
           </el-tooltip>
         </el-col>
         <el-col :span="3">
-          {{request.responseResult.responseTime}} ms
+          <span v-if="request.success">
+            {{request.responseResult.responseTime}} ms
+          </span>
+          <span style="color: #FE6F71" v-else>
+            {{request.responseResult.responseTime}} ms
+          </span>
         </el-col>
 
         <el-col :span="2">
-          <div class="success">
+          <div>
             <el-tag size="mini" type="success" v-if="request.success">
               {{ $t('api_report.success') }}
             </el-tag>
@@ -36,6 +42,13 @@
         </el-col>
       </el-row>
     </div>
+
+    <el-collapse-transition>
+      <div v-show="isActive" style="width: 99%">
+        <ms-request-result-tail v-if="isActive" :request-type="requestType" :request="request"
+                                :scenario-name="scenarioName"/>
+      </div>
+    </el-collapse-transition>
   </div>
 </template>
 
@@ -44,21 +57,23 @@
   import MsAssertionResults from "./AssertionResults";
   import MsRequestText from "./RequestText";
   import MsResponseText from "./ResponseText";
+  import MsRequestResultTail from "./RequestResultTail";
 
   export default {
     name: "MsRequestResult",
-    components: {MsResponseText, MsRequestText, MsAssertionResults, MsRequestMetric},
+    components: {MsResponseText, MsRequestText, MsAssertionResults, MsRequestMetric, MsRequestResultTail},
     props: {
       request: Object,
       scenarioName: String,
       indexNumber: Number,
     },
     data() {
-      return {}
+      return {isActive: false, requestType: undefined,}
     },
     methods: {
       active() {
-        this.$emit("requestResult", {request: this.request, scenarioName: this.scenarioName});
+        this.isActive = !this.isActive;
+        //this.$emit("requestResult", {request: this.request, scenarioName: this.scenarioName});
       }
     },
   }

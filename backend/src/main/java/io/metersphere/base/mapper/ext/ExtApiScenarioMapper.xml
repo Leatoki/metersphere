@@ -9,7 +9,7 @@
     </resultMap>
 
     <select id="list" resultMap="BaseResultMap">
-        select api_scenario.id, api_scenario.project_id, api_scenario.tag_id, api_scenario.user_id,
+        select api_scenario.id, api_scenario.project_id, api_scenario.tags, api_scenario.user_id,
         api_scenario.api_scenario_module_id,api_scenario.module_path, api_scenario.name, api_scenario.level,
         api_scenario.status, api_scenario.principal, api_scenario.step_total, api_scenario.follow_people,
         api_scenario.last_result,api_scenario.pass_rate,api_scenario.report_id,
@@ -40,6 +40,12 @@
             <if test="request.projectId != null">
                 AND api_scenario.project_id = #{request.projectId}
             </if>
+            <if test="request.ids != null and request.ids.size() > 0">
+                AND api_scenario.id in
+                <foreach collection="request.ids" item="itemId" separator="," open="(" close=")">
+                    #{itemId}
+                </foreach>
+            </if>
             <if test="request.moduleIds != null and request.moduleIds.size() > 0">
                 AND api_scenario.api_scenario_module_id in
                 <foreach collection="request.moduleIds" item="nodeId" separator="," open="(" close=")">
@@ -61,11 +67,11 @@
         </if>
     </select>
 
-    <select id="selectByTagId" resultType="io.metersphere.base.domain.ApiScenario">
-      select * from api_scenario where tag_id like CONCAT('%', #{id},'%')
+    <select id="selectByTagId" resultType="io.metersphere.base.domain.ApiScenarioWithBLOBs">
+      select * from api_scenario where tags like CONCAT('%', #{id},'%')
     </select>
 
-    <select id="selectIds" resultType="io.metersphere.base.domain.ApiScenario">
+    <select id="selectIds" resultType="io.metersphere.base.domain.ApiScenarioWithBLOBs">
         select * from api_scenario where id in
         <foreach collection="ids" item="v" separator="," open="(" close=")">
             #{v}
@@ -84,9 +90,53 @@
             <if test="request.moduleId != null">
                 AND api_scenario_module_id = #{request.moduleId}
             </if>
-            and scenario_definition like CONCAT('%', #{request.id},'%')
+            and scenario_definition like CONCAT('%', #{request.id},'%') and id != #{request.id}
         </where>
     </select>
 
+    <update id="removeToGc">
+        update api_scenario
+        set
+        status = 'Trash'
+        where id in
+        <foreach collection="ids" item="v" separator="," open="(" close=")">
+            #{v}
+        </foreach>
+    </update>
+
+    <update id="reduction">
+        update api_scenario
+        set
+        status = 'Underway'
+        where id in
+        <foreach collection="ids" item="v" separator="," open="(" close=")">
+            #{v}
+        </foreach>
+    </update>
+
+    <select id="countByProjectID" resultType="java.lang.Long">
+        SELECT COUNT(id) AS countNumber FROM api_scenario WHERE project_id = #{0}
+    </select>
+    <select id="countByProjectIDAndCreatInThisWeek" resultType="java.lang.Long">
+        SELECT count(id) AS countNumber FROM api_scenario
+        WHERE project_id = #{projectId}
+        AND create_time BETWEEN #{firstDayTimestamp} AND #{lastDayTimestamp}
+    </select>
+
+    <select id="countRunResultByProjectID" resultType="io.metersphere.api.dto.datacount.ApiDataCountResult">
+        SELECT count(id) AS countNumber, if(last_result is null,"notRun",last_result) AS groupField  FROM api_scenario
+        WHERE project_id = #{0}
+        GROUP BY groupField
+    </select>
+
+    <select id="selectIdsNotExistsInPlan" resultType="java.lang.String">
+        select c.id
+        from api_scenario c
+        where c.project_id = #{projectId} and c.id not in (
+          select pc.api_scenario_id
+          from test_plan_api_scenario pc
+          where pc.test_plan_id = #{planId}
+        )
+    </select>
 
 </mapper>

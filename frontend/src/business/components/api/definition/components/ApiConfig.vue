@@ -63,20 +63,7 @@
           this.initHttp();
           break;
       }
-      if (this.currentApi.response != null && this.currentApi.response != 'null' && this.currentApi.response != undefined) {
-        if (Object.prototype.toString.call(this.currentApi.response).match(/\[object (\w+)\]/)[1].toLowerCase() === 'object') {
-          this.response = this.currentApi.response;
-        } else {
-          this.response = new ResponseFactory(JSON.parse(this.currentApi.response));
-        }
-      } else {
-        this.response = {headers: [], body: new Body(), statusCode: [], type: "HTTP"};
-      }
-      if (this.currentApi != null && this.currentApi.id != null) {
-        this.reqUrl = "/api/definition/update";
-      } else {
-        this.reqUrl = "/api/definition/create";
-      }
+      this.formatApi();
     },
     methods: {
       runTest(data) {
@@ -100,6 +87,9 @@
             this.request = this.currentApi.request;
           } else {
             this.request = JSON.parse(this.currentApi.request);
+          }
+          if (!this.request.headers) {
+            this.request.headers = [];
           }
           this.currentApi.request = this.request;
           return true;
@@ -130,6 +120,46 @@
           this.currentApi.request = this.request;
         }
       },
+      formatApi() {
+        if (this.currentApi.response != null && this.currentApi.response != 'null' && this.currentApi.response != undefined) {
+          if (Object.prototype.toString.call(this.currentApi.response).match(/\[object (\w+)\]/)[1].toLowerCase() === 'object') {
+            this.response = this.currentApi.response;
+          } else {
+            this.response = JSON.parse(this.currentApi.response);
+          }
+        } else {
+          this.response = {headers: [], body: new Body(), statusCode: [], type: "HTTP"};
+        }
+        if (this.currentApi != null && this.currentApi.id != null) {
+          this.reqUrl = "/api/definition/update";
+        } else {
+          this.reqUrl = "/api/definition/create";
+        }
+        if (!this.request.hashTree) {
+          this.request.hashTree = [];
+        }
+        if (this.request.body && !this.request.body.binary) {
+          this.request.body.binary = [];
+        }
+        // 处理导入数据缺失问题
+        if (this.response.body) {
+          let body = new Body();
+          Object.assign(body, this.response.body);
+          if (!body.binary) {
+            body.binary = [];
+          }
+          if (!body.kvs) {
+            body.kvs = [];
+          }
+          if (!body.binary) {
+            body.binary = [];
+          }
+          this.response.body = body;
+        }
+        if (this.currentApi.moduleId && this.currentApi.moduleId === "root") {
+          this.currentApi.moduleId = "";
+        }
+      },
       saveApi(data) {
         this.setParameters(data);
         let bodyFiles = this.getBodyUploadFiles(data);
@@ -145,7 +175,11 @@
         data.protocol = this.currentProtocol;
         data.request = this.request;
         data.request.name = data.name;
-        data.request.protocol = this.currentProtocol;
+        if (this.currentProtocol === "DUBBO" || this.currentProtocol === "dubbo://") {
+          data.request.protocol = "dubbo://";
+        } else {
+          data.request.protocol = this.currentProtocol;
+        }
         data.id = data.request.id;
         data.response = this.response;
       },

@@ -23,7 +23,7 @@
             <el-col :span="16">
               <el-form-item :label="$t('api_report.request')" prop="path">
                 <el-input :placeholder="$t('api_test.definition.request.path_info')" v-model="httpForm.path"
-                          class="ms-http-input" size="small" style="margin-top: 5px">
+                          class="ms-http-input" size="small" style="margin-top: 5px" @change="urlChange">
                   <el-select v-model="httpForm.method" slot="prepend" style="width: 100px" size="small">
                     <el-option v-for="item in reqOptions" :key="item.id" :label="item.label" :value="item.id"/>
                   </el-select>
@@ -77,7 +77,7 @@
         <!-- 请求参数 -->
         <div>
           <p class="tip">{{$t('api_test.definition.request.req_param')}} </p>
-          <ms-api-request-form :request="request" :headers="request.headers" :isShowEnable="isShowEnable"/>
+          <ms-api-request-form :showScript="false" :request="request" :headers="request.headers" :isShowEnable="isShowEnable"/>
         </div>
 
       </el-form>
@@ -95,23 +95,30 @@
   import {WORKSPACE_ID} from '../../../../../../common/js/constants';
   import {REQ_METHOD, API_STATUS} from "../../model/JsonData";
   import MsJsr233Processor from "../processor/Jsr233Processor";
+  import {KeyValue} from "../../model/ApiTestModel";
 
   export default {
     name: "MsAddCompleteHttpApi",
     components: {MsResponseText, MsApiRequestForm, MsJsr233Processor},
     data() {
+      let validateURL = (rule, value, callback) => {
+        if (!this.httpForm.path.startsWith("/") || this.httpForm.path.match(/\s/) != null) {
+          callback(this.$t('api_test.definition.request.path_valid_info'));
+        }
+        callback();
+      };
       return {
         rule: {
           name: [
             {required: true, message: this.$t('test_track.case.input_name'), trigger: 'blur'},
             {max: 50, message: this.$t('test_track.length_less_than') + '50', trigger: 'blur'}
           ],
-          path: [{required: true, message: this.$t('api_test.definition.request.path_info'), trigger: 'blur'}],
+          path: [{required: true, message: this.$t('api_test.definition.request.path_info'), trigger: 'blur'}, {validator: validateURL, trigger: 'blur'}],
           userId: [{required: true, message: this.$t('test_track.case.input_maintainer'), trigger: 'change'}],
           moduleId: [{required: true, message: this.$t('test_track.case.input_module'), trigger: 'change'}],
           status: [{required: true, message: this.$t('commons.please_select'), trigger: 'change'}],
         },
-        httpForm: {},
+        httpForm: {environmentId: ""},
         isShowEnable: false,
         maintainerOptions: [],
         currentModule: {},
@@ -163,11 +170,43 @@
         });
         return path[0].path;
       },
+      urlChange() {
+        if (!this.httpForm.path) return;
+        let url = this.getURL(this.addProtocol(this.httpForm.path));
+        if (url) {
+          this.httpForm.path = decodeURIComponent("/" + url.hostname + url.pathname);
+        }
+      },
+      addProtocol(url) {
+        if (url) {
+          if (!url.toLowerCase().startsWith("https") && !url.toLowerCase().startsWith("http")) {
+            return "https://" + url;
+          }
+        }
+        return url;
+      },
+      getURL(urlStr) {
+        try {
+          let url = new URL(urlStr);
+          console.log(urlStr)
+          url.searchParams.forEach((value, key) => {
+            if (key && value) {
+              this.request.arguments.splice(0, 0, new KeyValue({name: key, required: false, value: value}));
+            }
+          });
+          return url;
+        } catch (e) {
+          this.$error(this.$t('api_test.request.url_invalid'), 2000);
+        }
+      },
     },
 
     created() {
       this.getMaintainerOptions();
-      this.httpForm = this.basisData;
+      if (!this.basisData.environmentId) {
+        this.basisData.environmentId = "";
+      }
+      this.httpForm = JSON.parse(JSON.stringify(this.basisData));
     }
   }
 </script>

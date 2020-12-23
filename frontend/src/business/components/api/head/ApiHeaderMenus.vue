@@ -1,22 +1,14 @@
 <template>
   <div id="menu-bar" v-if="isRouterAlive">
     <el-row type="flex">
+      <project-change :project-name="currentProject"/>
       <el-col :span="14">
         <el-menu class="header-menu" :unique-opened="true" mode="horizontal" router :default-active='$route.path'>
 
-          <el-submenu :class="{'deactivation':!isProjectActivation}"
-                      v-permission="['test_manager','test_user','test_viewer']" index="3">
-            <template v-slot:title>{{ $t('commons.project') }}</template>
-            <search-list ref="projectRecent" :options="projectRecent"/>
-            <el-divider class="menu-divider"/>
-            <el-menu-item :index="'/setting/project/create'">
-              <font-awesome-icon :icon="['fa', 'plus']"/>
-              <span style="padding-left: 7px;">{{ $t("project.create") }}</span>
-            </el-menu-item>
-            <ms-show-all :index="'/setting/project/all'"/>
-          </el-submenu>
-
-          <el-menu-item :index="'/api/home'">
+          <el-menu-item v-show="$store.state.switch.value=='new'" :index="'/api/home'">
+            {{ $t("i18n.home") }}
+          </el-menu-item>
+          <el-menu-item v-show="$store.state.switch.value=='old'" :index="'/api/home_obsolete'">
             {{ $t("i18n.home") }}
           </el-menu-item>
 
@@ -71,22 +63,13 @@ import MsCreateButton from "../../common/head/CreateButton";
 import MsCreateTest from "../../common/head/CreateTest";
 import {ApiEvent, LIST_CHANGE} from "@/business/components/common/head/ListEvent";
 import SearchList from "@/business/components/common/head/SearchList";
+import ProjectChange from "@/business/components/common/head/ProjectSwitch";
 
 export default {
   name: "MsApiHeaderMenus",
-  components: {SearchList, MsCreateTest, MsCreateButton, MsShowAll, MsRecentList},
+  components: {SearchList, MsCreateTest, MsCreateButton, MsShowAll, MsRecentList, ProjectChange},
   data() {
     return {
-      projectRecent: {
-        title: this.$t('project.recent'),
-        url: "/project/recent/5",
-        index: function (item) {
-          return '/api/test/list/' + item.id;
-        },
-        router: function (item) {
-          return {name: 'ApiTestList', params: {projectId: item.id, projectName: item.name}}
-        }
-      },
       testRecent: {
         title: this.$t('load_test.recent'),
         url: "/api/recent/5",
@@ -108,21 +91,13 @@ export default {
       isProjectActivation: true,
       isRouterAlive: true,
       apiTestProjectPath: '',
+      currentProject: ''
     }
   },
-  // watch: {
-  //   '$route'(to) {
-  //     this.init();
-  //   },
-  // },
   methods: {
     registerEvents() {
       ApiEvent.$on(LIST_CHANGE, () => {
-        // todo 这里偶尔会有 refs 为空的情况
-        if (!this.$refs.projectRecent) {
-          return;
-        }
-        this.$refs.projectRecent.recent();
+        // // todo 这里偶尔会有 refs 为空的情况
         this.$refs.testRecent.recent();
         this.$refs.reportRecent.recent();
       });
@@ -133,17 +108,6 @@ export default {
         this.isRouterAlive = true;
       });
     },
-    // init() {
-    //   let path = this.$route.path;
-    //   if (path.indexOf("/api/test/list") >= 0 && !!this.$route.params.projectId) {
-    //     this.apiTestProjectPath = path;
-    //     //不激活项目菜单栏
-    //     this.isProjectActivation = false;
-    //     this.reload();
-    //   } else {
-    //     this.isProjectActivation = true;
-    //   }
-    // },
   },
   mounted() {
     this.registerEvents();
